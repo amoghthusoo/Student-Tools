@@ -1,0 +1,157 @@
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import  status
+from .serializers import *
+
+import random as rd
+from .email_sender import Email
+from .database import Database
+from .hash_password import PasswordHasher
+
+class GenerateRegistrationOtpAPIView(APIView):
+
+    def post(self, request):
+
+        serializer = GenerateRegistrationOtpSerializer(data = request.data)
+
+        if(serializer.is_valid()):
+            
+            try:
+                database = Database()
+                email = Email()
+
+                database.create_tables()
+
+                if(database.email_exists(request.data["email"])):
+                    database.close()
+                    return Response({"message": "Email already exists!"}, status=status.HTTP_400_BAD_REQUEST)
+                
+                otp = rd.randint(100000, 999999)
+                database.save_registration_otp(request.data["email"], otp)
+                email.send_email(
+                    subject = "Registration OTP",
+                    body = "Your Registration OTP is " + str(otp),
+                    to_email = request.data["email"]
+                )
+
+                email.close()
+                database.close()
+
+                return Response({"message": "OTP sent successfully!"}, status=status.HTTP_201_CREATED)
+            
+            except Exception as e:
+                print(f"Exception -> {e}")
+                return Response({"message": "Failed to generate OTP."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class RegistrationAPIView(APIView):
+
+    def post(self, request):
+        serializer = RegistrationSerializer(data = request.data)
+
+        if(serializer.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.user_exists(request.data["username"])):
+                database.close()
+                return Response({"message": "User already exists!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if(database.email_exists(request.data["email"])):
+                database.close()
+                return Response({"message": "Email already exists!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if(not database.valid_registration_otp(request.data["email"], int(request.data["otp"]))):
+                database.close()
+                return Response({"message": "Incorrect OTP!"}, status=status.HTTP_400_BAD_REQUEST)
+
+            hashed_password = PasswordHasher.hash_password_bcrypt(request.data["password"])
+
+            database.register(request.data["username"], hashed_password, request.data["email"], request.data["is_student"])
+            database.close()
+            return Response({"message": "Registered successfully!"}, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class LoginAPIView(APIView):
+
+    def post(self, request):
+        
+        serializer = LoginSerializer(data = request.data)
+
+        if(serializer.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            
+            if(database.authenticate(request.data["username"], request.data["password"])):
+                is_student = database.is_student(request.data["username"])
+                database.close()
+                return Response({"message": "Logged in successfully!", 
+                                 "username" : request.data["username"], 
+                                 "is_student" : is_student}, 
+                                 status=status.HTTP_200_OK)
+            else:
+                database.close()
+                return Response({"message": "Invalid credentials!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class GenerateResetPasswordAPIView(APIView):
+
+    def post(self, request):
+        
+        serializers = GenerateResetPasswordOtpSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+            database = Database()
+            email = Email()
+
+            database.create_tables()
+
+            if(database.user_email_combination_exists(request.data["username"], request.data["email"])):
+                
+                otp = rd.randint(100000, 999999)
+                database.save_reset_password_otp(request.data["email"], otp)
+                email.send_email(
+                    subject = "Reset Password OTP",
+                    body = "Your Reset Password OTP is " + str(otp),
+                    to_email = request.data["email"]
+                )
+
+                email.close()
+                database.close()
+            
+            else:
+                database.close()
+                return Response({"message": "Invalid Details"}, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response({"message": "OTP sent successfully!"}, status=status.HTTP_201_CREATED)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ResetPasswordAPIView(APIView):
+
+    def post(self, request):
+        
+        serializers = ResetPasswordSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+            database = Database()
+            database.create_tables()
+
+            if(not database.valid_reset_password_otp(request.data["email"], int(request.data["otp"]))):
+                database.close()
+                return Response({"message": "Incorrect OTP!"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                database.reset_password(request.data["username"], PasswordHasher.hash_password_bcrypt(request.data["new_password"]))
+                database.close()
+                return Response({"message": "Password reset successfully!"}, status=status.HTTP_200_OK)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
