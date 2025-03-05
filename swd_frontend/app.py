@@ -3,16 +3,24 @@ from kivy.lang import Builder
 from kivy.core.window import Window
 from kivymd.uix.snackbar import Snackbar
 from kivy.clock import Clock
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.button import MDFlatButton
+from kivymd.uix.transition.transition import MDSwapTransition
+from kivymd.uix.transition.transition import MDSlideTransition
+
 
 import requests
 import threading
+import re
 
 Windows_Mode = True
+DEBUG = False
 
 if Windows_Mode == True:
     Window.size = (380, 768)
     Window.top = 0
     Window.left = 986
+
 
 UI = """
 
@@ -674,22 +682,17 @@ MDScreenManager:
                         selected_color: app.theme_color
                         on_release : app.nav_drawer_help_support()
 
-        MDWidget:
+                    MDNavigationDrawerDivider:
 
-# <DrawerClickableItem@MDNavigationDrawerItem>
-#     focus_color: "#e7e4c0"
-#     text_color: "#4a4939"
-#     icon_color: "#4a4939"
-#     ripple_color: "#c5bdd2"
-#     selected_color: "#0c6c4d"
-
-
-# <DrawerLabelItem@MDNavigationDrawerItem>
-#     text_color: "#4a4939"
-#     icon_color: "#4a4939"
-#     focus_behavior: False
-#     selected_color: "#4a4939"
-#     _no_ripple_effect: True        
+                    MDNavigationDrawerItem:
+                        icon: "logout"
+                        text: "Logout"
+                        text_color : [0.8, 0, 0, 1]
+                        icon_color : [0.8, 0, 0, 1]
+                        focus_color: "#e7e4c0"
+                        selected_color: [1, 0, 0, 1]
+                        on_release : app.nav_drawer_logout()
+        MDWidget: 
 """
 
 
@@ -774,7 +777,9 @@ class App(MDApp):
             self.control_dict["sign_in_snackbar"] = False
         
         if(self.control_dict["logged_in"]):
-            self.root.transition.direction = "left"
+            self.root.ids.sign_in.disabled = False
+            self.root.transition = MDSlideTransition()
+            self.root.transition.direction = "up"
             self.root.current = "home"
             self.control_dict["logged_in"] = False
             self.reset_signin_screen()
@@ -836,16 +841,19 @@ class App(MDApp):
             self.root.ids.reset_password_confirm_password.password = True
 
     def redirect_to_sign_up_page(self):
+        self.root.transition = MDSlideTransition()
         self.root.transition.direction = "left"
         self.root.current = "sign_up"
 
     def redirect_to_sign_in_page(self):
 
+        self.root.transition = MDSlideTransition()
         self.root.transition.direction = "right"
         self.root.current = "sign_in"
 
     def redirect_to_reset_password_page(self):
         
+        self.root.transition = MDSlideTransition()
         self.root.transition.direction = "left"
         self.root.current = "password_reset"
 
@@ -1039,6 +1047,17 @@ class App(MDApp):
             ).open()
             return
         
+        is_strong, message = self.check_password_strength(self.root.ids.sign_up_password.text)
+
+        if(not is_strong):
+            Snackbar(
+                text = message,
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_y = 0.1,
+                duration=1.5
+            ).open()
+        
         if(self.root.ids.sign_up_email.text == ""):
             Snackbar(
                 text="Email is required.",
@@ -1141,10 +1160,44 @@ class App(MDApp):
             ).open()
             return
         
+        is_strong, message = self.check_password_strength(self.root.ids.reset_password_password.text)
+
+        if(not is_strong):
+            Snackbar(
+                text = message,
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+            return
+        
         self.root.ids.reset_password.disabled = True
         self.root.ids.reset_password_spinner.active = True
         threading.Thread(target=self.reset_password_thread).start()
-        
+
+    def check_password_strength(self, password):
+        # Check length
+        if len(password) < 8:
+            return False, "Password must be at least 8 chars."
+
+        # Check for uppercase letters
+        if not re.search(r'[A-Z]', password):
+            return False, "Password needs an uppercase letter."
+
+        # Check for lowercase letters
+        if not re.search(r'[a-z]', password):
+            return False, "Password needs a lowercase letter."
+
+        # Check for digits
+        if not re.search(r'[0-9]', password):
+            return False, "Password needs a digit."
+
+        # Check for special characters
+        if not re.search(r'[\W_]', password):
+            return False, "Password needs a special char."
+
+        return True, "Password is strong."
 
     def reset_signup_screen(self):
 
@@ -1194,13 +1247,44 @@ class App(MDApp):
     def nav_drawer_help_support(self):
         pass
 
+    def nav_drawer_logout(self):
+
+        self.logout_dialog = MDDialog(
+            title="Logout",
+            text="Are you sure you want to logout?",
+            size_hint = (0.9, 0.2),
+            buttons = [
+                MDFlatButton(
+                    text="CANCEL",
+                    on_release = lambda x : self.logout_dialog.dismiss()
+                ),
+                MDFlatButton(
+                    text="LOGOUT",
+                    on_release = lambda x : self.logout()
+                )
+            ],
+        )
+        self.logout_dialog.open()
+
+    def logout(self):
+        self.logout_dialog.dismiss()
+        self.config_dict["username"] = None
+        self.config_dict["is_student"] = None
+        
+        
+        self.root.transition = MDSwapTransition()
+        self.root.current = "sign_in"
+        self.root.ids.nav_drawer.set_state("close")
+
     def temp(self):
-        # print(self.config_dict)
-        self.root.transition.direction = "left"
-        self.root.current = "home"
+        if(DEBUG):
+            # print(self.config_dict)
+            self.root.transition.direction = "left"
+            self.root.current = "home"
 
     def on_start(self):
-        self.fps_monitor_start()
+        if(DEBUG):
+            self.fps_monitor_start()
 
     def build(self):
         return Builder.load_string(UI)

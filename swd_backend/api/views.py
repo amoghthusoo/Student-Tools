@@ -69,6 +69,7 @@ class RegistrationAPIView(APIView):
 
             hashed_password = PasswordHasher.hash_password_bcrypt(request.data["password"])
 
+            database.clear_otp(request.data["email"], "registration")
             database.register(request.data["username"], hashed_password, request.data["email"], request.data["is_student"])
             database.close()
             return Response({"message": "Registered successfully!"}, status=status.HTTP_201_CREATED)
@@ -148,7 +149,11 @@ class ResetPasswordAPIView(APIView):
             if(not database.valid_reset_password_otp(request.data["email"], int(request.data["otp"]))):
                 database.close()
                 return Response({"message": "Incorrect OTP!"}, status=status.HTTP_400_BAD_REQUEST)
+            elif(not database.user_email_combination_exists(request.data["username"], request.data["email"])):
+                database.close()
+                return Response({"message": "Invalid Details!"}, status=status.HTTP_400_BAD_REQUEST)
             else:
+                database.clear_otp(request.data["email"], "reset_password")
                 database.reset_password(request.data["username"], PasswordHasher.hash_password_bcrypt(request.data["new_password"]))
                 database.close()
                 return Response({"message": "Password reset successfully!"}, status=status.HTTP_200_OK)

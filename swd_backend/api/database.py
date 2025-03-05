@@ -183,6 +183,31 @@ class Database:
         else:
             return False
         
+    def clear_otp(self, email, otp_type):
+        
+        if (otp_type == "registration"):
+            self.crs.execute(f"""
+            delete from registration_otp where email = "{email}";
+            """)
+        
+        elif (otp_type == "reset_password"):
+            self.crs.execute(f"""
+            delete from reset_password_otp where email = "{email}";
+            """)
+
+    def user_email_combination_exists(self, username, email):
+        
+        self.crs.execute(f"""
+        select * from user_credentials where username = "{username}" and email = "{email}";
+        """)
+
+        result = self.crs.fetchone()
+
+        if(result):
+            return True
+        else:
+            return False
+        
     def close(self):
         self.hdl.close()
 
