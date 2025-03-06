@@ -8,7 +8,6 @@ from kivymd.uix.button import MDFlatButton
 from kivymd.uix.transition.transition import MDSwapTransition
 from kivymd.uix.transition.transition import MDSlideTransition
 
-
 import requests
 import threading
 import re
@@ -554,7 +553,7 @@ MDScreenManager:
                         MDTopAppBar:
 
                             id : home_screen_top_app_bar
-                            title : "Home"
+                            title : "Student Tools"
                             left_action_items : [["menu", lambda x: nav_drawer.set_state("open")]]
                             md_bg_color : app.theme_color
                             elevation : 0
@@ -687,8 +686,8 @@ MDScreenManager:
                     MDNavigationDrawerItem:
                         icon: "logout"
                         text: "Logout"
-                        text_color : [0.8, 0, 0, 1]
-                        icon_color : [0.8, 0, 0, 1]
+                        text_color : [0.7, 0, 0, 1]
+                        icon_color : [0.7, 0, 0, 1]
                         focus_color: "#e7e4c0"
                         selected_color: [1, 0, 0, 1]
                         on_release : app.nav_drawer_logout()
@@ -1054,7 +1053,7 @@ class App(MDApp):
                 text = message,
                 snackbar_x="9dp",
                 snackbar_y="9dp",
-                size_hint_y = 0.1,
+                size_hint_x=0.95,
                 duration=1.5
             ).open()
         
@@ -1179,7 +1178,7 @@ class App(MDApp):
     def check_password_strength(self, password):
         # Check length
         if len(password) < 8:
-            return False, "Password must be at least 8 chars."
+            return False, "Password must be at least 8 characters."
 
         # Check for uppercase letters
         if not re.search(r'[A-Z]', password):
@@ -1195,7 +1194,7 @@ class App(MDApp):
 
         # Check for special characters
         if not re.search(r'[\W_]', password):
-            return False, "Password needs a special char."
+            return False, "Password needs a special character."
 
         return True, "Password is strong."
 
