@@ -211,12 +211,9 @@ class Database:
     def close(self):
         self.hdl.close()
 
-
-
 def main():
     database = Database()
     database.generate_registration_otp("amoghthusoo@gmail.com")
-    
 
 if (__name__ == "__main__"):
     main()

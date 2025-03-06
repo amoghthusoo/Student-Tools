@@ -2,6 +2,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import  status
 from .serializers import *
+from rest_framework.parsers import MultiPartParser, FormParser
+import os
+from django.conf import settings
 
 import random as rd
 from .email_sender import Email
@@ -158,5 +161,30 @@ class ResetPasswordAPIView(APIView):
                 database.close()
                 return Response({"message": "Password reset successfully!"}, status=status.HTTP_200_OK)
         
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FileUploadAPIView(APIView):
+
+    def post(self, request):
+
+        serializers = FileUploadSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+            
+            uploaded_file = request.FILES["file"]
+
+            save_path = os.path.join(settings.UPLOADED_DOCS, request.data["username"], uploaded_file.name)
+            os.makedirs(os.path.dirname(save_path), exist_ok = True)
+
+            if(os.path.exists(save_path)):
+                return Response({"message": "File already exists!"}, status=status.HTTP_400_BAD_REQUEST)
+
+            with open(save_path, 'wb+') as destination:
+                for chunk in uploaded_file.chunks():
+                    destination.write(chunk)
+
+            return Response({"message": "File uploaded successfully!", "file_name": uploaded_file.name}, status = status.HTTP_201_CREATED)
+
         else:
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)

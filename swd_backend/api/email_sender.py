@@ -11,12 +11,9 @@ class Email:
         self.smtp_server = "smtp.gmail.com"
         self.smtp_port = 587
 
-        
         self.server = smtplib.SMTP(self.smtp_server, self.smtp_port)
         self.server.starttls()  # Upgrade the connection to a secure encrypted SSL/TLS connection
         self.server.login(self.smtp_user, self.smtp_password)
-        
-        
 
     def send_email(self, subject, body, to_email):
         
