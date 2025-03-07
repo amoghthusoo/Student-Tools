@@ -48,3 +48,8 @@ class FileUploadSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid file extension. Only PDF, TXT, DOCX AND PPTX are allowed.")
 
         return value
+    
+class FileDownloadSerializer(serializers.Serializer):
+    
+    username = serializers.CharField(max_length = 256)
+    file_name = serializers.CharField(max_length = 256)

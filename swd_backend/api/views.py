@@ -2,9 +2,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import  status
 from .serializers import *
-from rest_framework.parsers import MultiPartParser, FormParser
 import os
 from django.conf import settings
+from django.http import HttpResponse
 
 import random as rd
 from .email_sender import Email
@@ -186,5 +186,26 @@ class FileUploadAPIView(APIView):
 
             return Response({"message": "File uploaded successfully!", "file_name": uploaded_file.name}, status = status.HTTP_201_CREATED)
 
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class FileDownloadAPIView(APIView):
+
+    def post(self, request):
+
+        serializers = FileDownloadSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+            file_path = os.path.join(settings.UPLOADED_DOCS, request.data["username"], request.data["file_name"])
+
+            if(os.path.exists(file_path)):
+                with open(file_path, "rb") as file:
+                    file_data = file.read() # Read file data
+
+                return HttpResponse(file_data, status = status.HTTP_200_OK) 
+                   
+            else:
+                return Response({"message": "File not found!"}, status = status.HTTP_404_NOT_FOUND)
+        
         else:
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)

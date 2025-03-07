@@ -7,7 +7,7 @@ data = {
 }
 
 file = {
-    "file" : open(r"C:\Users\Dell\Desktop\swd_project\api_testing\ch01 Introduction.ppt", "rb"),
+    "file" : open(r"C:\Users\Dell\Desktop\swd_project\api_testing\test.txt", "rb"),
 }
 
 response = requests.post(url, data = data, files = file)
