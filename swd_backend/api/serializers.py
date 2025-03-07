@@ -53,3 +53,8 @@ class FileDownloadSerializer(serializers.Serializer):
     
     username = serializers.CharField(max_length = 256)
     file_name = serializers.CharField(max_length = 256)
+
+class FileDeleteSerializer(serializers.Serializer):
+    
+    username = serializers.CharField(max_length = 256)
+    file_name = serializers.CharField(max_length = 256)

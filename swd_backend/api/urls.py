@@ -9,5 +9,6 @@ urlpatterns = [
     path("reset_password/", ResetPasswordAPIView.as_view(), name = "reset_password"),
 
     path("upload_file/", FileUploadAPIView.as_view(), name = "upload_file"),
-    path("download_file/", FileDownloadAPIView.as_view(), name = "download_file"),``
+    path("download_file/", FileDownloadAPIView.as_view(), name = "download_file"),
+    path("delete_file/", FileDeleteAPIView.as_view(), name = "delete_file"),
 ]

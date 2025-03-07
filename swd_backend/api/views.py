@@ -209,3 +209,22 @@ class FileDownloadAPIView(APIView):
         
         else:
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class FileDeleteAPIView(APIView):
+
+    def post(self, request):
+      
+        serializers = FileDownloadSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+            file_path = os.path.join(settings.UPLOADED_DOCS, request.data["username"], request.data["file_name"])
+
+            if(os.path.exists(file_path)):
+                os.remove(file_path)
+                return Response({"message": "File deleted successfully!"}, status = status.HTTP_200_OK)
+                   
+            else:
+                return Response({"message": "File not found!"}, status = status.HTTP_404_NOT_FOUND)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
