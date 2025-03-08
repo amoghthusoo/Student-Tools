@@ -5,6 +5,11 @@ class Database:
 
     def __init__(self, host="localhost", user="root", password="root", database="swd_project", autocommit=True, auth_plugin = "mysql_native_password"):
 
+        host = "sql12.freesqldatabase.com"
+        user = "sql12766620"
+        password = "5Pr4c9msCG"
+        database = "sql12766620"        
+
         self.host = host
         self.user = user
         self.password = password
