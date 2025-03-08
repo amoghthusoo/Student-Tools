@@ -14,6 +14,8 @@ import re
 
 Windows_Mode = True
 DEBUG = True
+DOMAIN = "http://127.0.0.1:8000/"
+# DOMAIN = "https://student-tools-five.vercel.app/"
 
 if Windows_Mode == True:
     Window.size = (380, 768)
@@ -702,7 +704,8 @@ class App(MDApp):
         super().__init__(**kwargs)
 
         self.theme_color = [123/255, 2/255, 144/255, 255/255]
-        self.domain = "http://127.0.0.1:8000/"
+        self.domain = DOMAIN
+        
 
         self.control_dict = {
             "sign_up_otp_sent_snackbar": False,
