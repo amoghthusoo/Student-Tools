@@ -13,7 +13,7 @@ import threading
 import re
 
 Windows_Mode = True
-DEBUG = False
+DEBUG = True
 
 if Windows_Mode == True:
     Window.size = (380, 768)
@@ -555,6 +555,7 @@ MDScreenManager:
                             id : home_screen_top_app_bar
                             title : "Student Tools"
                             left_action_items : [["menu", lambda x: nav_drawer.set_state("open")]]
+                            right_action_items : [["dots-vertical", lambda x: app.temp()]]
                             md_bg_color : app.theme_color
                             elevation : 0
 
@@ -717,6 +718,8 @@ class App(MDApp):
             "reset_password_snackbar" : False,
             "reset_password_snackbar_message" : None,
             "password_reset" : False,
+            "logout" : False,
+            "logout_snackbar_message" : None,
         }
 
         Clock.schedule_interval(self.control_method, 1/10)
@@ -724,6 +727,7 @@ class App(MDApp):
         self.config_dict = {
             "username" : None,
             "is_student" : None,
+            "session_id" : None
         }
 
     def control_method(self, dt):
@@ -816,6 +820,16 @@ class App(MDApp):
 
             self.control_dict["reset_password_snackbar"] = False
 
+        if(self.control_dict["logout"]):
+            Snackbar(
+                text=self.control_dict["logout_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+            self.control_dict["logout"] = False
+
     def show_hide_sign_in_password(self):
 
         if self.root.ids.sign_in_show_password_checkbox.active:
@@ -875,12 +889,11 @@ class App(MDApp):
 
         self.root.ids.sign_in_spinner.active = False
 
-        
-
         if(response.status_code == 200):
             self.control_dict["logged_in"] = True
             self.config_dict["username"] = response.json()["username"]
             self.config_dict["is_student"] = response.json()["is_student"]
+            self.config_dict["session_id"] = response.json()["session_id"]
         else:
             self.control_dict["sign_in_snackbar_message"] = response.json()["message"]  
             self.control_dict["sign_in_snackbar"] = True
@@ -1265,11 +1278,32 @@ class App(MDApp):
         )
         self.logout_dialog.open()
 
+    def logout_thread(self):
+    
+        url = self.domain + "api/logout/"
+
+        data = {
+            "username" : self.config_dict["username"],
+            "session_id" : self.config_dict["session_id"]
+        }
+
+        response = requests.post(url, data = data)
+
+        
+        self.control_dict["logout_snackbar_message"] = response.json()["message"]
+        self.control_dict["logout"] = True
+
+        # print(f"Status Code : {response.status_code}")
+        # print(f"Response JSON : {response.json()}")
+
     def logout(self):
+
+        threading.Thread(target=self.logout_thread).start()
+
         self.logout_dialog.dismiss()
         self.config_dict["username"] = None
         self.config_dict["is_student"] = None
-        
+        self.config_dict["session_id"] = None
         
         self.root.transition = MDSwapTransition()
         self.root.current = "sign_in"
@@ -1277,9 +1311,9 @@ class App(MDApp):
 
     def temp(self):
         if(DEBUG):
-            # print(self.config_dict)
-            self.root.transition.direction = "left"
-            self.root.current = "home"
+            print(self.config_dict)
+            # self.root.transition.direction = "left"
+            # self.root.current = "home"
 
     def on_start(self):
         if(DEBUG):

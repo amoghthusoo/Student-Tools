@@ -5,6 +5,7 @@ from .serializers import *
 import os
 from django.conf import settings
 from django.http import HttpResponse
+import uuid
 
 import random as rd
 from .email_sender import Email
@@ -89,14 +90,16 @@ class LoginAPIView(APIView):
 
             database = Database()
             database.create_tables()
-
             
             if(database.authenticate(request.data["username"], request.data["password"])):
                 is_student = database.is_student(request.data["username"])
+                session_id = str(uuid.uuid4())
+                database.save_session_id(request.data["username"], session_id)
                 database.close()
                 return Response({"message": "Logged in successfully!", 
                                  "username" : request.data["username"], 
-                                 "is_student" : is_student}, 
+                                 "is_student" : is_student,
+                                 "session_id" : session_id}, 
                                  status=status.HTTP_200_OK)
             else:
                 database.close()
@@ -160,6 +163,27 @@ class ResetPasswordAPIView(APIView):
                 database.reset_password(request.data["username"], PasswordHasher.hash_password_bcrypt(request.data["new_password"]))
                 database.close()
                 return Response({"message": "Password reset successfully!"}, status=status.HTTP_200_OK)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LogoutAPIView(APIView):
+
+    def post(self, request):
+        
+        serializers = LogoutSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+            database = Database()
+            database.create_tables()
+            
+            if(database.valid_session_id(request.data["username"], request.data["session_id"])):
+                database.clear_session_id(request.data["username"])
+                database.close()
+                return Response({"message": "Logged out successfully!"}, status=status.HTTP_200_OK)
+            else:
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
         
         else:
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)

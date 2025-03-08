@@ -1,10 +1,10 @@
 import requests
 
-url = "http://127.0.0.1:8000/api/login/"
+url = "http://127.0.0.1:8000/api/logout/"
 
 data = {
     "username" : "amogh",
-    "password" : "Amogh@123"
+    "session_id" : "63d604e7-fd09-4726-a835-a3d964e952ad"
 }
 
 response = requests.post(url, data = data)

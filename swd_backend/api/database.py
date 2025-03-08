@@ -36,7 +36,8 @@ class Database:
                         username varchar(256) primary key,
                         password varchar(64),
                         email varchar(256),
-                        is_student boolean
+                        is_student boolean,
+                        session_id varchar(36)
                         );
         """)
 
@@ -105,7 +106,7 @@ class Database:
             is_student = 0
 
         self.crs.execute(f"""
-        insert into user_credentials values ("{username}", "{password}", "{email}", "{is_student}");
+        insert into user_credentials values ("{username}", "{password}", "{email}", "{is_student}", NULL);
         """)
     
     def authenticate(self, username, password):
@@ -208,12 +209,46 @@ class Database:
         else:
             return False
         
+    def save_session_id(self, username, session_id):
+        
+        self.crs.execute(f"""
+        update user_credentials set session_id = "{session_id}" where username = "{username}";
+        """)
+
+    def valid_session_id(self, username, session_id):
+        
+        self.crs.execute(f"""
+        select session_id from user_credentials where username = "{username}";
+        """)
+
+        result = self.crs.fetchone()
+
+        print(result)
+
+        if(result and result[0] == session_id):
+            return True
+        else:
+            return False
+        
+    def clear_session_id(self, username):
+        
+        self.crs.execute(f"""
+        update user_credentials set session_id = NULL where username = "{username}";
+        """
+        )
+        
     def close(self):
         self.hdl.close()
 
+    def delete_tables(self):
+        self.crs.execute("drop table registration_otp;")
+        self.crs.execute("drop table reset_password_otp;")
+        self.crs.execute("drop table user_credentials;")
+
 def main():
     database = Database()
-    database.generate_registration_otp("amoghthusoo@gmail.com")
+    database.delete_tables()
+    database.close()
 
 if (__name__ == "__main__"):
     main()

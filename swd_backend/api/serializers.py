@@ -30,6 +30,11 @@ class ResetPasswordSerializer(serializers.Serializer):
     otp = serializers.IntegerField(min_value=100000, max_value=999999)
     new_password = serializers.CharField(max_length = 64)
 
+class LogoutSerializer(serializers.Serializer):
+    
+    username = serializers.CharField(max_length = 256)
+    session_id = serializers.CharField()
+
 class FileUploadSerializer(serializers.Serializer):
 
     username =  serializers.CharField(max_length = 256)
