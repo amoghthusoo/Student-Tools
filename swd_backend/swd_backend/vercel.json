@@ -1,0 +1,8 @@
+{
+  "build": {
+    "env": {
+      "DJANGO_SETTINGS_MODULE": "swd_backend.settings.production"
+    },
+    "cmd": "pip install -r requirements.txt"
+  }
+}
