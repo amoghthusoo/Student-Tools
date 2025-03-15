@@ -32,7 +32,6 @@ class Database:
         self.crs = self.hdl.cursor()
 
     def create_tables(self):
-        print("reaching here 1")
         self.crs.execute("""
         create table if not exists registration_otp(
                         email varchar(256) primary key,
@@ -56,7 +55,6 @@ class Database:
                         session_id varchar(36)
                         );
         """)
-        print("reaching here 2")
 
 
     def save_registration_otp(self, email, otp):
