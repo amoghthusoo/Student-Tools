@@ -241,6 +241,19 @@ class Database:
         update user_credentials set session_id = NULL where username = "{username}";
         """
         )
+
+    def valid_session_id(self, username, session_id):
+        
+        self.crs.execute(f"""
+        select session_id from user_credentials where username = "{username}";
+        """)
+
+        result = self.crs.fetchone()
+
+        if(result and result[0] == session_id):
+            return True
+        else:
+            return False
         
     def close(self):
         self.hdl.close()

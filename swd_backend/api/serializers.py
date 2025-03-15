@@ -39,6 +39,7 @@ class FileUploadSerializer(serializers.Serializer):
 
     username =  serializers.CharField(max_length = 256)
     file = serializers.FileField()
+    session_id = serializers.CharField()
 
     def validate_file(self, value):
         """ Custom validation for file size and type """
@@ -58,8 +59,10 @@ class FileDownloadSerializer(serializers.Serializer):
     
     username = serializers.CharField(max_length = 256)
     file_name = serializers.CharField(max_length = 256)
+    session_id = serializers.CharField()
 
 class FileDeleteSerializer(serializers.Serializer):
     
     username = serializers.CharField(max_length = 256)
     file_name = serializers.CharField(max_length = 256)
+    session_id = serializers.CharField()

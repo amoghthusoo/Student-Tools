@@ -195,6 +195,14 @@ class FileUploadAPIView(APIView):
         serializers = FileUploadSerializer(data = request.data)
 
         if(serializers.is_valid()):
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            database.close()
             
             uploaded_file = request.FILES["file"]
 
@@ -220,6 +228,16 @@ class FileDownloadAPIView(APIView):
         serializers = FileDownloadSerializer(data = request.data)
 
         if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            database.close()
+        
             file_path = os.path.join(settings.UPLOADED_DOCS, request.data["username"], request.data["file_name"])
 
             if(os.path.exists(file_path)):
@@ -241,6 +259,16 @@ class FileDeleteAPIView(APIView):
         serializers = FileDownloadSerializer(data = request.data)
 
         if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            database.close()
+        
             file_path = os.path.join(settings.UPLOADED_DOCS, request.data["username"], request.data["file_name"])
 
             if(os.path.exists(file_path)):

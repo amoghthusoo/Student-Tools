@@ -4,7 +4,7 @@ from email.mime.text import MIMEText
 
 class Email:
 
-    def __init__(self, from_email = "swdproject2025@gmail.com", smtp_user = "swdproject2025@gmail.com", smtp_password = "eeunaemhvoqvmohv"):
+    def __init__(self, from_email = "swdproject2025@gmail.com", smtp_user = "swdproject2025@gmail.com", smtp_password = "lrxoupppouidaybf"):
         self.from_email = from_email
         self.smtp_user = smtp_user
         self.smtp_password = smtp_password
@@ -43,4 +43,4 @@ if(__name__ == "__main__"):
     main()
 
 # swdproject2025@gmail.com
-# eeunaemhvoqvmohv
+# lrxoupppouidaybf

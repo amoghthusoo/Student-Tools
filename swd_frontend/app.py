@@ -13,7 +13,7 @@ import threading
 import re
 
 Windows_Mode = True
-DEBUG = True
+DEBUG = False
 DOMAIN = "http://127.0.0.1:8000/"
 # DOMAIN = "https://student-tools-five.vercel.app/"
 
