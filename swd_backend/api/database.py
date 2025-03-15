@@ -1,14 +1,23 @@
 import mysql.connector as mc
 from .hash_password import PasswordHasher
 
+# import os
+# from dotenv import load_dotenv
+# load_dotenv()
+
 class Database:
 
     def __init__(self, host="localhost", user="root", password="root", database="swd_project", autocommit=True, auth_plugin = "mysql_native_password"):
+        
+        host = "sql12.freesqldatabase.com"
+        user = "sql12766620"
+        password = "5Pr4c9msCG"
+        database = "sql12766620"
 
-        # host = "sql12.freesqldatabase.com"
-        # user = "sql12766620"
-        # password = "5Pr4c9msCG"
-        # database = "sql12766620"        
+        # host = os.getenv("DB_HOST")
+        # user = os.getenv("DB_USER")
+        # password = os.getenv("DB_PASSWORD")
+        # database = os.getenv("DB_NAME")
 
         self.host = host
         self.user = user
