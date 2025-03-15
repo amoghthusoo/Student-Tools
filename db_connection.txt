@@ -1,0 +1,2 @@
+mysql --user avnadmin --password=AVNS_DxYTjqxn0mY87wNZ-RH --host mysql-database-student-tools-student-tools.h.aivencloud.com 
+--port 26403 defaultdb

@@ -7,12 +7,13 @@ from .hash_password import PasswordHasher
 
 class Database:
 
-    def __init__(self, host="localhost", user="root", password="root", database="swd_project", autocommit=True, auth_plugin = "mysql_native_password"):
+    def __init__(self, host="localhost", port=3306,  user="root", password="root", database="swd_project", autocommit=True, auth_plugin = "mysql_native_password"):
         
-        host = "sql12.freesqldatabase.com"
-        user = "sql12766620"
-        password = "5Pr4c9msCG"
-        database = "sql12766620"
+        host = "mysql-database-student-tools-student-tools.h.aivencloud.com"
+        user = "avnadmin"
+        password = "AVNS_DxYTjqxn0mY87wNZ-RH"
+        database = "defaultdb"
+        port = 26403
 
         # host = os.getenv("DB_HOST")
         # user = os.getenv("DB_USER")
@@ -20,17 +21,18 @@ class Database:
         # database = os.getenv("DB_NAME")
 
         self.host = host
+        self.port = port
         self.user = user
         self.password = password
         self.database = database
         self.autocommit = autocommit
         self.auth_plugin = auth_plugin
-        self.hdl = mc.connect(host=self.host, user=self.user, password=self.password,
+        self.hdl = mc.connect(host=self.host, port=self.port, user=self.user, password=self.password,
                               database=self.database, autocommit=self.autocommit, auth_plugin = self.auth_plugin)
         self.crs = self.hdl.cursor()
 
     def create_tables(self):
-
+        print("reaching here 1")
         self.crs.execute("""
         create table if not exists registration_otp(
                         email varchar(256) primary key,
@@ -54,30 +56,31 @@ class Database:
                         session_id varchar(36)
                         );
         """)
+        print("reaching here 2")
 
 
     def save_registration_otp(self, email, otp):
 
-        self.crs.execute(f"""
-        select * from registration_otp where email = "{email}";
-        """)
+        self.crs.execute("""
+        select * from registration_otp where email = %s;
+        """, (email,))
 
         result = self.crs.fetchone()
 
         if(result):
-            self.crs.execute(f"""
-            update registration_otp set otp = {otp} where email = "{email}"; 
-            """)
+            self.crs.execute("""
+            update registration_otp set otp = %s where email = %s; 
+            """, (otp, email))
         else:
-            self.crs.execute(f"""
-            insert into registration_otp values ("{email}", {otp});
-            """)
+            self.crs.execute("""
+            insert into registration_otp values (%s, %s);
+            """, (email, otp))
 
     def user_exists(self, username):
         
-        self.crs.execute(f"""
-            select * from user_credentials where username = "{username}";
-            """)
+        self.crs.execute("""
+            select * from user_credentials where username = %s;
+            """, (username,))
         
         result = self.crs.fetchone()
 
@@ -88,9 +91,9 @@ class Database:
 
     def email_exists(self, email):
 
-        self.crs.execute(f"""
-            select * from user_credentials where email = "{email}";
-            """)
+        self.crs.execute("""
+            select * from user_credentials where email = %s;
+            """, (email,))
         
         result = self.crs.fetchone()
 
@@ -98,12 +101,13 @@ class Database:
             return True 
         else:
             return False
+        
 
     def valid_registration_otp(self, email, otp):
 
-        self.crs.execute(f"""
-        select otp from registration_otp where email = "{email}";
-        """)
+        self.crs.execute("""
+        select otp from registration_otp where email = %s;
+        """, (email,))
 
         result = self.crs.fetchone()
 
@@ -119,15 +123,15 @@ class Database:
         else:
             is_student = 0
 
-        self.crs.execute(f"""
-        insert into user_credentials values ("{username}", "{password}", "{email}", "{is_student}", NULL);
-        """)
+        self.crs.execute("""
+        insert into user_credentials values (%s, %s, %s, %s, NULL);
+        """, (username, password, email, is_student))
     
     def authenticate(self, username, password):
         
-        self.crs.execute(f"""
-        select password from user_credentials where username = "{username}";
-        """)
+        self.crs.execute("""
+        select password from user_credentials where username = %s;
+        """, (username,))
 
         result = self.crs.fetchone()
 
@@ -138,9 +142,9 @@ class Database:
         
     def user_email_combination_exists(self, username, email):
         
-        self.crs.execute(f"""
-        select * from user_credentials where username = "{username}" and email = "{email}";
-        """)
+        self.crs.execute("""
+        select * from user_credentials where username = %s and email = %s;
+        """, (username, email))
 
         result = self.crs.fetchone()
 
@@ -151,32 +155,32 @@ class Database:
         
     def save_reset_password_otp(self, email, otp):
 
-        self.crs.execute(f"""
-        select * from reset_password_otp where email = "{email}";
-        """)
+        self.crs.execute("""
+        select * from reset_password_otp where email = %s;
+        """, (email,))
 
         result = self.crs.fetchone()
 
         if(result):
-            self.crs.execute(f"""
-            update reset_password_otp set otp = {otp} where email = "{email}";
-            """)
+            self.crs.execute("""
+            update reset_password_otp set otp = %s where email = %s;
+            """, (otp, email))
         else:
-            self.crs.execute(f"""
-            insert into reset_password_otp values ("{email}", {otp});
-            """)
+            self.crs.execute("""
+            insert into reset_password_otp values (%s, %s);
+            """, (email, otp))
     
     def reset_password(self, username, new_password):
         
-        self.crs.execute(f"""
-        update user_credentials set password = "{new_password}" where username = "{username}";
-        """)    
+        self.crs.execute("""
+        update user_credentials set password = %s where username = %s;
+        """, (new_password, username))    
 
     def valid_reset_password_otp(self, email, otp):
         
-        self.crs.execute(f"""
-        select otp from reset_password_otp where email = "{email}";
-        """)
+        self.crs.execute("""
+        select otp from reset_password_otp where email = %s;
+        """, (email,))
 
         result = self.crs.fetchone()
 
@@ -187,9 +191,9 @@ class Database:
         
     def is_student(self, username):
         
-        self.crs.execute(f"""
-        select is_student from user_credentials where username = "{username}";
-        """)
+        self.crs.execute("""
+        select is_student from user_credentials where username = %s;
+        """, (username,))
 
         result = self.crs.fetchone()
 
@@ -201,20 +205,20 @@ class Database:
     def clear_otp(self, email, otp_type):
         
         if (otp_type == "registration"):
-            self.crs.execute(f"""
-            delete from registration_otp where email = "{email}";
-            """)
+            self.crs.execute("""
+            delete from registration_otp where email = %s;
+            """, (email,))
         
         elif (otp_type == "reset_password"):
-            self.crs.execute(f"""
-            delete from reset_password_otp where email = "{email}";
-            """)
+            self.crs.execute("""
+            delete from reset_password_otp where email = %s;
+            """, (email,))
 
     def user_email_combination_exists(self, username, email):
         
-        self.crs.execute(f"""
-        select * from user_credentials where username = "{username}" and email = "{email}";
-        """)
+        self.crs.execute("""
+        select * from user_credentials where username = %s and email = %s;
+        """, (username, email))
 
         result = self.crs.fetchone()
 
@@ -225,15 +229,15 @@ class Database:
         
     def save_session_id(self, username, session_id):
         
-        self.crs.execute(f"""
-        update user_credentials set session_id = "{session_id}" where username = "{username}";
-        """)
+        self.crs.execute("""
+        update user_credentials set session_id = %s where username = %s;
+        """, (session_id, username))
 
     def valid_session_id(self, username, session_id):
         
-        self.crs.execute(f"""
-        select session_id from user_credentials where username = "{username}";
-        """)
+        self.crs.execute("""
+        select session_id from user_credentials where username = %s;
+        """, (username,))
 
         result = self.crs.fetchone()
 
@@ -246,16 +250,15 @@ class Database:
         
     def clear_session_id(self, username):
         
-        self.crs.execute(f"""
-        update user_credentials set session_id = NULL where username = "{username}";
-        """
-        )
+        self.crs.execute("""
+        update user_credentials set session_id = NULL where username = %s;
+        """, (username,))
 
     def valid_session_id(self, username, session_id):
         
-        self.crs.execute(f"""
-        select session_id from user_credentials where username = "{username}";
-        """)
+        self.crs.execute("""
+        select session_id from user_credentials where username = %s;
+        """, (username,))
 
         result = self.crs.fetchone()
 
