@@ -9,12 +9,16 @@ class Database:
 
     def __init__(self, host="localhost", port=3306,  user="root", password="root", database="swd_project", autocommit=True, auth_plugin = "mysql_native_password"):
         
-       
-
         # host = os.getenv("DB_HOST")
         # user = os.getenv("DB_USER")
         # password = os.getenv("DB_PASSWORD")
         # database = os.getenv("DB_NAME")
+
+        host = "mysql-database-student-tools-student-tools.h.aivencloud.com"
+        user = "avnadmin"
+        password = "AVNS_DxYTjqxn0mY87wNZ-RH"
+        database = "defaultdb"
+        port = 26403
 
         self.host = host
         self.port = port
