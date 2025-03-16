@@ -12,16 +12,19 @@ import requests
 import threading
 import re
 
-Windows_Mode = True
+WINDOWS_MODE = True
 DEBUG = False
-DOMAIN = "http://127.0.0.1:8000/"
-# DOMAIN = "https://student-tools-five.vercel.app/"
+LIVE_DOMAIN = True
 
-if Windows_Mode == True:
+
+if (WINDOWS_MODE) == True:
     Window.size = (380, 768)
     Window.top = 0
     Window.left = 986
-
+if(LIVE_DOMAIN):
+    DOMAIN = "https://student-tools-five.vercel.app/"
+else:
+    DOMAIN = "http://127.0.0.1:8000/"
 
 UI = """
 
