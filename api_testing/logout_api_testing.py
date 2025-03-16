@@ -4,7 +4,7 @@ url = "http://127.0.0.1:8000/api/logout/"
 
 data = {
     "username" : "amogh",
-    "session_id" : "63d604e7-fd09-4726-a835-a3d964e952ad"
+    "session_id" : "1f50ffca-0d28-44a9-a17b-7e67cd6018d4"
 }
 
 response = requests.post(url, data = data)
