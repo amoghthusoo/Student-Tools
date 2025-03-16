@@ -1,2 +1,2 @@
+*.env
 secret.txt
-swd_backend\.env
