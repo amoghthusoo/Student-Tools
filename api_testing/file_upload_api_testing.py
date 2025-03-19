@@ -4,7 +4,7 @@ url = "http://127.0.0.1:8000/api/upload_file/"
 
 data = {
     "username" : "amogh",
-    "session_id" : "e5ac2b36-474f-4e6a-8986-d22c2164070f"
+    "session_id" : "1969cb04-c9ad-44f3-9fa0-4970959e5dba"
 }
 
 file = {

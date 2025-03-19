@@ -51,7 +51,7 @@ class FileUploadSerializer(serializers.Serializer):
             raise serializers.ValidationError("File size exceeds 10MB limit.")
         
         if (ext not in allowed_extensions):
-            raise serializers.ValidationError("Invalid file extension. Only PDF, TXT, DOCX AND PPTX are allowed.")
+            raise serializers.ValidationError("Only .pdf, .txt, .docx and .pptx are allowed.")
 
         return value
     
@@ -65,4 +65,9 @@ class FileDeleteSerializer(serializers.Serializer):
     
     username = serializers.CharField(max_length = 256)
     file_name = serializers.CharField(max_length = 256)
+    session_id = serializers.CharField()
+
+class FileListSerializer(serializers.Serializer):
+    
+    username = serializers.CharField(max_length = 256)
     session_id = serializers.CharField()

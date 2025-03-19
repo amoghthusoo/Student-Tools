@@ -5,7 +5,7 @@ url = "http://127.0.0.1:8000/api/login/"
 
 data = {
     "username" : "amogh",
-    "password" : "Test@123"
+    "password" : "Amogh@123"
 }
 
 response = requests.post(url, data = data)

@@ -5,15 +5,18 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+HOSTED_DB = False
+
 class Database:
 
     def __init__(self, host="localhost", port=3306,  user="root", password="root", database="swd_project", autocommit=True, auth_plugin = "mysql_native_password"):
         
-        host = os.getenv("DB_HOST")
-        port = os.getenv("DB_PORT")
-        user = os.getenv("DB_USER")
-        password = os.getenv("DB_PASSWORD")
-        database = os.getenv("DB_NAME")
+        if(HOSTED_DB):
+            host = os.getenv("DB_HOST")
+            port = os.getenv("DB_PORT")
+            user = os.getenv("DB_USER")
+            password = os.getenv("DB_PASSWORD")
+            database = os.getenv("DB_NAME")
 
         self.host = host
         self.port = port

@@ -219,7 +219,9 @@ class FileUploadAPIView(APIView):
             return Response({"message": "File uploaded successfully!", "file_name": uploaded_file.name}, status = status.HTTP_201_CREATED)
 
         else:
-            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+            # print(str(serializers.errors["file"][0]))
+            return Response({"message": str(serializers.errors["file"][0])}, status=status.HTTP_400_BAD_REQUEST)
+            # return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class FileDownloadAPIView(APIView):
 
@@ -277,6 +279,38 @@ class FileDeleteAPIView(APIView):
                    
             else:
                 return Response({"message": "File not found!"}, status = status.HTTP_404_NOT_FOUND)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class FileListAPIView(APIView):
+
+    def post(self, request):
+
+        # from time import sleep
+        # sleep(5)
+
+        serializers = FileListSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            database.close()
+        
+            user_dir = os.path.join(settings.UPLOADED_DOCS, request.data["username"])
+
+            if(os.path.exists(user_dir)):
+                files = os.listdir(user_dir)
+                return Response({"files": files}, status = status.HTTP_200_OK)
+                   
+            else:
+                return Response({"files": []}, status = status.HTTP_200_OK)
         
         else:
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
