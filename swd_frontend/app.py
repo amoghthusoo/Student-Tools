@@ -23,7 +23,7 @@ import re
 
 WINDOWS_MODE = True
 DEBUG = True
-LIVE_DOMAIN = False
+LIVE_DOMAIN = True
 
 
 if (WINDOWS_MODE) == True:
@@ -1583,6 +1583,9 @@ class App(MDApp):
         self.control_dict["file_name"] = None,
         self.control_dict["file_download_snackbar_message"] = None,
         self.control["file_download_snackbar"] = False
+        
+        self.control["file_delete_snackbar_message"] = False
+        self.control["file_delete_snackbar"] = False
 
     def logout_thread(self):
 
