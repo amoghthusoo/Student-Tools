@@ -32,8 +32,8 @@ if (WINDOWS_MODE) == True:
     Window.left = 986
 if (LIVE_DOMAIN):
     # DOMAIN = "https://student-tools-five.vercel.app/"
-    # DOMAIN = "https://swdproject2025.pythonanywhere.com/"
-    DOMAIN = "https://student-tools.onrender.com/"
+    DOMAIN = "https://swdproject2025.pythonanywhere.com/"
+    # DOMAIN = "https://student-tools.onrender.com/"
 else:
     DOMAIN = "http://127.0.0.1:8000/"
 
