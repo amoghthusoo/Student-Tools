@@ -23,7 +23,7 @@ import re
 
 WINDOWS_MODE = True
 DEBUG = True
-LIVE_DOMAIN = True
+LIVE_DOMAIN = False
 
 
 if (WINDOWS_MODE) == True:
@@ -31,7 +31,8 @@ if (WINDOWS_MODE) == True:
     Window.top = 0
     Window.left = 986
 if (LIVE_DOMAIN):
-    DOMAIN = "https://student-tools-five.vercel.app/"
+    # DOMAIN = "https://student-tools-five.vercel.app/"
+    DOMAIN = "https://swdproject2025.pythonanywhere.com/"
 else:
     DOMAIN = "http://127.0.0.1:8000/"
 

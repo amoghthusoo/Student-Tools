@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-HOSTED_DB = True
+HOSTED_DB = False
 
 class Database:
 
