@@ -54,6 +54,18 @@ class Database:
                         );
         """)
 
+        self.crs.execute("""
+        create table if not exists threads(
+                        username varchar(256) primary key,
+                        thread_name varchar(256)
+        """)
+
+        self.crs.execute("""
+        create table if not exists thread_content("
+                        thread_name varchar(256),
+                        username varchar(256),
+                        reply varchar(8192)
+        """)
 
     def save_registration_otp(self, email, otp):
 

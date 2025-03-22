@@ -14,7 +14,7 @@ class Test(MDApp):
 MDScreen:
 
     MDFlatButton:
-        text : "80.91 106"
+        text : ""
         theme_text_color: "Custom"
         text_color: 1, 0, 0, 1
         pos_hint : {"center_x": .5, "center_y": .5}
