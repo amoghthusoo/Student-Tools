@@ -56,15 +56,17 @@ class Database:
 
         self.crs.execute("""
         create table if not exists threads(
-                        username varchar(256) primary key,
+                        username varchar(256),
                         thread_name varchar(256)
+                        );
         """)
 
         self.crs.execute("""
-        create table if not exists thread_content("
+        create table if not exists thread_replies(
                         thread_name varchar(256),
                         username varchar(256),
                         reply varchar(8192)
+                        );
         """)
 
     def save_registration_otp(self, email, otp):
@@ -274,6 +276,47 @@ class Database:
             return True
         else:
             return False
+        
+    def if_thread_exists(self, thread_name):
+        
+        self.crs.execute("""
+        select * from threads where thread_name = %s;
+        """, (thread_name,))
+
+        result = self.crs.fetchone()
+
+        if(result):
+            return True
+        else:
+            return False
+        
+    def create_thread(self, username, thread_name):
+        
+        self.crs.execute("""
+        insert into threads values (%s, %s);
+        """, (username, thread_name))
+
+    def post_reply(self, username, thread_name, reply):
+        
+        self.crs.execute("""
+        insert into thread_replies values (%s, %s, %s);
+        """, (thread_name, username, reply))
+
+    def list_threads(self):
+        
+        self.crs.execute("""
+        select * from threads;
+        """)
+
+        result = self.crs.fetchall()
+
+        return result
+    
+    def delete_thread(self, thread_name):
+            
+        self.crs.execute("""
+        delete from threads where thread_name = %s;
+        """, (thread_name,))
         
     def close(self):
         self.hdl.close()

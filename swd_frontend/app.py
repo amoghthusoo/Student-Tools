@@ -4,7 +4,7 @@ from kivy.core.window import Window
 from kivymd.uix.snackbar import Snackbar
 from kivy.clock import Clock
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDFlatButton
+from kivymd.uix.button import MDFlatButton, MDIconButton
 from kivymd.uix.transition.transition import MDSwapTransition
 from kivymd.uix.transition.transition import MDSlideTransition
 
@@ -15,6 +15,10 @@ from kivymd.uix.scrollview import MDScrollView
 from kivymd.uix.list import MDList, OneLineListItem
 from kivymd.uix.button import MDFloatingActionButton
 from kivymd.uix.filemanager import MDFileManager
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.card import MDCard
+from kivymd.uix.relativelayout import MDRelativeLayout
+from kivymd.uix.textfield import MDTextField
 
 import os
 import requests
@@ -23,7 +27,7 @@ import re
 
 WINDOWS_MODE = True
 DEBUG = True
-LIVE_DOMAIN = True
+LIVE_DOMAIN = False
 
 
 if (WINDOWS_MODE) == True:
@@ -600,41 +604,21 @@ MDScreenManager:
                                 on_tab_press : app.docs_press()
                                 on_leave : app.docs_leave()
 
-                                # MDLabel:
-                                #     text: "Docs"
-                                #     halign: "center"
-
-                                # MDFloatingActionButton:
-                                #     icon: "plus"
-                                #     md_bg_color: app.theme_color
-                                    
-
-                                #     elevation : 0
-                                #     shadow_softness : 80
-                                #     shadow_softness_size : 2
-
-                                #     pos_hint: {'center_x': .9, 'center_y': .07}
 
                             MDBottomNavigationItem:
+                                id : forums
                                 name: "forums"
                                 text: "Forums"
                                 icon: "forum"
-                                
+                                on_tab_press : app.forums_press()
+                                # on_leave : app.forums_leave()                                
 
-                                MDLabel:
-                                    text: "Forums"
-                                    halign: "center"
-
-                                MDFloatingActionButton:
-                                    icon: "pencil"
-                                    md_bg_color: app.theme_color
-                                    style : "standard"
-
-                                    elevation : 0
-                                    shadow_softness : 80
-                                    shadow_softness_size : 2
-
-                                    pos_hint: {'center_x': .9, 'center_y': .07}
+                                MDScrollView:
+                                    
+                                    MDList:
+                                        id : thread_list
+                                        spacing : "10dp"
+                                        padding : "10dp"   
 
             MDNavigationDrawer:
 
@@ -749,15 +733,29 @@ class App(MDApp):
             "files": None,
 
             "file_path": None,
-            "file_upload_snackbar" : False,
-            "file_upload_snackbar_message" : None,
+            "file_upload_snackbar": False,
+            "file_upload_snackbar_message": None,
 
-            "file_name" : None,
-            "file_download_snackbar_message" : None,
-            "file_download_snackbar" : False,
+            "file_name": None,
+            "file_download_snackbar_message": None,
+            "file_download_snackbar": False,
 
-            "file_delete_snackbar_message" : None,
-            "file_delete_snackbar" : False,
+            "file_delete_snackbar_message": None,
+            "file_delete_snackbar": False,
+
+            "threads": None,
+            "forums_snackbar_message": None,
+            "forums_snackbar": False,
+            "forums_message": None,
+            "show_forums_message": False,
+            "show_threads": False,
+
+            "create_thread_snackbar": False,
+            "create_thread_snackbar_message": None,
+
+            "delete_thread_snackbar" : False,
+            "delete_thread_snackbar_message" : None,
+            "delete_thread_name" : None,
         }
 
         Clock.schedule_interval(self.control_method, 1/10)
@@ -873,6 +871,10 @@ class App(MDApp):
                 duration=1.5
             ).open()
 
+            self.reset_config_dict()
+            self.reset_control_dict()
+            self.reset_screens()
+
         if (self.control_dict["docs_snackbar"]):
 
             self.control_dict["docs_snackbar"] = False
@@ -950,7 +952,7 @@ class App(MDApp):
                 file_list.add_widget(
                     OneLineListItem(
                         text=file,
-                        on_release = lambda x : self.file_actions(x.text)
+                        on_release=lambda x: self.file_actions(x.text)
                     )
                 )
 
@@ -969,7 +971,7 @@ class App(MDApp):
             self.root.ids.docs.add_widget(self.file_list_scroll_view)
             self.root.ids.docs.add_widget(self.docs_floating_button)
 
-        if(self.control_dict["file_upload_snackbar"]):
+        if (self.control_dict["file_upload_snackbar"]):
 
             self.control_dict["file_upload_snackbar"] = False
 
@@ -986,7 +988,7 @@ class App(MDApp):
                 duration=1.5
             ).open()
 
-        if(self.control_dict["file_download_snackbar"]):
+        if (self.control_dict["file_download_snackbar"]):
             self.control_dict["file_download_snackbar"] = False
             Snackbar(
                 text=self.control_dict["file_download_snackbar_message"],
@@ -996,9 +998,9 @@ class App(MDApp):
                 duration=1.5
             ).open()
 
-        if(self.control_dict["file_delete_snackbar"]):
+        if (self.control_dict["file_delete_snackbar"]):
             self.control_dict["file_delete_snackbar"] = False
-            
+
             self.delete_file_spinner.active = False
             self.delete_file_button.disabled = False
             self.file_actions_dialog.dismiss()
@@ -1011,6 +1013,183 @@ class App(MDApp):
                 size_hint_x=0.95,
                 duration=1.5
             ).open()
+
+        if (self.control_dict["forums_snackbar"]):
+
+            self.control_dict["forums_snackbar"] = False
+            Snackbar(
+                text=self.control_dict["forums_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+
+        if (self.control_dict["show_forums_message"]):
+
+            self.control_dict["show_forums_message"] = False
+            self.forums_spinner.active = False
+
+            try:
+                self.root.ids.forums.remove_widget(self.forums_message)
+            except:
+                pass
+            try:
+                self.root.ids.forums.remove_widget(self.forums_floating_button)
+            except:
+                pass
+            try:
+                self.root.ids.forums.remove_widget(self.forums_spinner)
+            except:
+                pass
+            try:
+                child_list = []
+                for child in self.root.ids.thread_list.children:
+                    child_list.append(child)
+                for child in child_list:
+                    self.root.ids.thread_list.remove_widget(child)
+            except:
+                pass
+
+            self.forums_message = MDLabel(
+                text=self.control_dict["forums_message"],
+                halign="center"
+            )
+            self.root.ids.forums.add_widget(self.forums_message)
+
+            self.forums_floating_button = MDFloatingActionButton(
+                icon="pencil",
+                md_bg_color=self.theme_color,
+                elevation=0,
+                shadow_color=[1, 1, 1, 1],
+                pos_hint={'center_x': .9, 'center_y': .07},
+                on_release=lambda x: self.create_thread_dialog_callback()
+            )
+            self.root.ids.forums.add_widget(self.forums_floating_button)
+
+        if (self.control_dict["show_threads"]):
+
+            self.control_dict["show_threads"] = False
+            self.forums_spinner.active = False
+
+            try:
+                self.root.ids.forums.remove_widget(self.forums_message)
+            except:
+                pass
+            try:
+                self.root.ids.forums.remove_widget(self.forums_floating_button)
+            except:
+                pass
+            try:
+                self.root.ids.forums.remove_widget(self.forums_spinner)
+            except:
+                pass
+            try:
+                child_list = []
+                for child in self.root.ids.thread_list.children:
+                    child_list.append(child)
+                for child in child_list:
+                    self.root.ids.thread_list.remove_widget(child)
+            except:
+                pass
+
+
+            for thread in self.control_dict["threads"]:
+
+                md_relative_layout = MDRelativeLayout()
+                
+                if(self.config_dict["username"] == thread[0]):
+                    md_relative_layout.add_widget(
+                        MDIconButton(
+                            id = thread[1],
+                            icon="delete",
+                            pos_hint={"top": 1, "right": 1},
+                            on_release = lambda x : self.delete_thread_dialog_callback(x.id),
+                        )
+                    )
+
+                md_relative_layout.add_widget(
+                    MDLabel(
+                        text=f"{thread[0]}",
+                        color="grey",
+                        pos=("12dp", "48dp"),
+                        bold=True
+                    )
+                )
+                md_relative_layout.add_widget(
+                    MDLabel(
+                        text=f"{thread[1]}",
+                        color="grey",
+                        pos=("12dp", "12dp"),
+                        size_hint=(0.9, 1)
+                    )
+                )
+
+                self.root.ids.thread_list.add_widget(
+                    MDCard(
+                        md_relative_layout,
+                        md_bg_color=[123/255, 2/255, 144/255, 100/255],
+                        size_hint=(1, None),
+                        height="150dp",
+                        pos_hint={"center_x": .5, "center_y": .5},
+                        on_release=lambda x: self.expand_thread("thread_name")
+                    )
+                )
+
+            self.forums_floating_button = MDFloatingActionButton(
+                icon="pencil",
+                md_bg_color=self.theme_color,
+                elevation=0,
+                shadow_color=[1, 1, 1, 1],
+                pos_hint={'center_x': .9, 'center_y': .07},
+                on_release=lambda x: self.create_thread_dialog_callback()
+            )
+
+            self.root.ids.forums.add_widget(self.forums_floating_button)
+
+        if (self.control_dict["forums_snackbar"]):
+
+            self.control_dict["forums_snackbar"] = False
+            Snackbar(
+                text=self.control_dict["forums_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+
+        if(self.control_dict["create_thread_snackbar"]):
+
+            self.control_dict["create_thread_snackbar"] = False
+            self.create_thread_spinner.active = False
+            self.create_thread_button.disabled = False
+            self.create_thread_dialog.dismiss()
+            self.forums_press()
+
+            Snackbar(
+                text=self.control_dict["create_thread_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+
+        if(self.control_dict["delete_thread_snackbar"]):
+
+            self.control_dict["delete_thread_snackbar"] = False
+            self.delete_thread_spinner.active = False
+            self.delete_thread_button.disabled = False
+            self.delete_thread_dialog.dismiss()
+            self.forums_press()
+
+            Snackbar(
+                text=self.control_dict["delete_thread_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+
 
     def select_path(self, path):
         '''
@@ -1052,8 +1231,6 @@ class App(MDApp):
         )
         self.upload_file_dialog.open()
 
-
-
     def exit_file_manager(self, *args):
         '''Called when the user reaches the root of the directory tree.'''
         self.file_manager.close()
@@ -1063,16 +1240,16 @@ class App(MDApp):
         url = self.domain + "/api/upload_file/"
 
         data = {
-            "username" : self.config_dict["username"],
-            "session_id" : self.config_dict["session_id"]
+            "username": self.config_dict["username"],
+            "session_id": self.config_dict["session_id"]
         }
 
         file = {
-            "file" : open(f"{self.control_dict["file_path"]}", "rb"),
+            "file": open(f"{self.control_dict["file_path"]}", "rb"),
         }
 
         try:
-            response = requests.post(url, data = data, files = file)
+            response = requests.post(url, data=data, files=file)
         except:
             self.upload_file_dialog.dismiss()
             self.control_dict["file_upload_snackbar_message"] = "Failed to connect to server."
@@ -1082,7 +1259,8 @@ class App(MDApp):
         # print(response.json())
 
         self.upload_file_dialog.dismiss()
-        self.control_dict["file_upload_snackbar_message"] = response.json()["message"]    
+        self.control_dict["file_upload_snackbar_message"] = response.json()[
+            "message"]
         self.control_dict["file_upload_snackbar"] = True
 
     def upload_file(self):
@@ -1553,9 +1731,9 @@ class App(MDApp):
         self.config_dict["session_id"] = None
 
     def reset_control_dict(self):
-        
+
         self.control_dict["sign_up_otp_sent_snackbar"] = False
-        self.control_dict["sign_up_otp_sent_snackbar_message"] =  None
+        self.control_dict["sign_up_otp_sent_snackbar_message"] = None
         self.control_dict["sign_up_snackbar"] = False
         self.control_dict["sign_up_snackbar_message"] = None
         self.control_dict["account_created"] = False
@@ -1583,10 +1761,35 @@ class App(MDApp):
 
         self.control_dict["file_name"] = None,
         self.control_dict["file_download_snackbar_message"] = None,
-        self.control["file_download_snackbar"] = False
+        self.control_dict["file_download_snackbar"] = False
+
+        self.control_dict["file_delete_snackbar_message"] = False
+        self.control_dict["file_delete_snackbar"] = False
+
+        self.control_dict["threads"] = None
+        self.control_dict["forums_snackbar_message"] = None
+        self.control_dict["formus_snackbar"] = False
+        self.control_dict["forums_message"] = None
+        self.control_dict["show_forums_message"] = False
+        self.control_dict["show_threads"] = False
+
+        self.control_dict["create_thread_snackbar"] = False
+        self.control_dict["create_thread_snackbar_message"] = None
+
+        self.control_dict["delete_thread_snackbar"] = False
+        self.control_dict["delete_thread_snackbar_message"] = None
+        self.control_dict["delete_thread_name"] = None
+
+    def reset_screens(self):
         
-        self.control["file_delete_snackbar_message"] = False
-        self.control["file_delete_snackbar"] = False
+        try:
+            child_list = []
+            for child in self.root.ids.thread_list.children:
+                child_list.append(child)
+            for child in child_list:
+                self.root.ids.thread_list.remove_widget(child)
+        except:
+            pass
 
     def logout_thread(self):
 
@@ -1603,8 +1806,6 @@ class App(MDApp):
             "message"]
         self.control_dict["logout"] = True
 
-        self.reset_config_dict()
-        self.reset_control_dict()
 
     def logout(self):
 
@@ -1613,14 +1814,14 @@ class App(MDApp):
         self.logout_dialog.dismiss()
         self.root.transition = MDSwapTransition()
         self.root.current = "sign_in"
-        
+
         self.root.ids.nav_drawer.set_state("close")
         self.root.ids.bottom_nav.switch_tab("dashboard")
         try:
             self.root.ids.docs.remove_widget(self.docs_message)
         except:
             pass
-        
+
         try:
             self.root.ids.docs.remove_widget(self.docs_floating_button)
         except:
@@ -1630,8 +1831,6 @@ class App(MDApp):
             self.root.ids.docs.remove_widget(self.file_list_scroll_view)
         except:
             pass
-        
-        
 
     def docs_press_thread(self):
 
@@ -1698,7 +1897,7 @@ class App(MDApp):
             text="DOWNLOAD",
             on_release=lambda button: self.download_file()
         )
-        
+
         self.delete_file_spinner = MDSpinner(
             color=[1, 1, 1, 1],
             size_hint=(None, None),
@@ -1732,33 +1931,37 @@ class App(MDApp):
     def download_file_thread(self):
         url = self.domain + "/api/download_file/"
 
-        data = {"username" : self.config_dict["username"],
+        data = {"username": self.config_dict["username"],
                 "file_name": self.control_dict["file_name"],
-                "session_id" : self.config_dict["session_id"]}  # Send filename in request body
+                # Send filename in request body
+                "session_id": self.config_dict["session_id"]}
 
         try:
-            response = requests.post(url, data = data)  # Stream the file
+            response = requests.post(url, data=data)  # Stream the file
         except:
             self.file_actions_dialog.dismiss()
             self.control_dict["file_download_snackbar_message"] = "Failed to connect to server."
             self.control_dict["file_download_snackbar"] = True
             return
 
-        download_path = os.path.join(os.path.join(os.path.expanduser('~'), 'Downloads'), self.control_dict["file_name"])
-        
+        download_path = os.path.join(os.path.join(os.path.expanduser(
+            '~'), 'Downloads'), self.control_dict["file_name"])
+
         if (response.status_code == 200):
             with open(download_path, "wb") as file:
-                file.write(response.content)  # Write the binary response to a file
+                # Write the binary response to a file
+                file.write(response.content)
         else:
             print(f"Failed to download file: {response.json()}")
 
         self.file_actions_dialog.dismiss()
-        self.control_dict["file_download_snackbar_message"] = "File downloaded successfully!"   
+        self.control_dict["file_download_snackbar_message"] = "File downloaded successfully!"
         self.control_dict["file_download_snackbar"] = True
 
     def download_file(self):
         self.download_file_button.disabled = True
-        self.download_file_button.disabled_color = [245/255, 245/255, 245/255, 1]
+        self.download_file_button.disabled_color = [
+            245/255, 245/255, 245/255, 1]
         self.download_file_spinner.color = self.theme_color
         self.download_file_spinner.active = True
 
@@ -1768,20 +1971,21 @@ class App(MDApp):
         url = self.domain + "/api/delete_file/"
 
         data = {
-            "username" : self.config_dict["username"],
-            "file_name" : self.control_dict["file_name"],
-            "session_id" : self.config_dict["session_id"]
+            "username": self.config_dict["username"],
+            "file_name": self.control_dict["file_name"],
+            "session_id": self.config_dict["session_id"]
         }
 
         try:
-            response = requests.post(url, data = data)
+            response = requests.post(url, data=data)
         except:
             self.upload_file_dialog.dismiss()
             self.control_dict["file_delete_snackbar_message"] = "Failed to connect to server."
             self.control_dict["file_delete_snackbar"] = True
             return
 
-        self.control_dict["file_delete_snackbar_message"] = response.json()["message"]    
+        self.control_dict["file_delete_snackbar_message"] = response.json()[
+            "message"]
         self.control_dict["file_delete_snackbar"] = True
 
     def delete_file(self):
@@ -1792,13 +1996,204 @@ class App(MDApp):
 
         threading.Thread(target=self.delete_file_thread).start()
 
+    def forums_press_thread(self):
+
+        url = self.domain + "api/list_threads/"
+        data = {
+            "username": self.config_dict["username"],
+            "session_id": self.config_dict["session_id"]
+        }
+
+        try:
+            response = requests.post(url, data=data)
+        except:
+            self.forums_spinner.active = False
+            self.control_dict["forums_snackbar_message"] = "Failed to connect to server."
+            self.control_dict["forums_snackbar"] = True
+            return
+
+        threads = response.json()["threads"]
+
+        if (threads != self.control_dict["threads"]):
+
+            self.control_dict["threads"] = threads
+            if (len(threads) == 0):
+                self.control_dict["forums_message"] = "No threads found."
+                self.control_dict["show_forums_message"] = True
+            else:
+                self.control_dict["show_threads"] = True
+
+    def forums_press(self):
+
+        if (self.control_dict["threads"] == None):
+            self.forums_spinner = MDSpinner(
+                color=self.theme_color,
+                size_hint=(None, None),
+                size=(dp(32), dp(32)),
+                line_width=2,
+                active=True,
+                pos_hint={'center_x': .5, 'center_y': .5}
+            )
+            self.root.ids.forums.add_widget(self.forums_spinner)
+
+        threading.Thread(target=self.forums_press_thread).start()
+
+    def create_thread_thread(self):
+        
+        url = self.domain + "/api/create_thread/"
+
+        data = {
+            "username": self.config_dict["username"],
+            "session_id": self.config_dict["session_id"],
+            "thread_name": self.create_thread_dialog.content_cls.text
+        }
+
+        try:
+            response = requests.post(url, data=data)
+        except:
+            self.create_thread_dialog.dismiss()
+            self.control_dict["create_thread_snackbar_message"] = "Failed to connect to server."
+            self.control_dict["create_thread_snackbar"] = True
+            return
+
+        self.create_thread_dialog.dismiss()
+        self.control_dict["create_thread_snackbar_message"] = response.json()[
+            "message"]
+        self.control_dict["create_thread_snackbar"] = True
+
+    def create_thread(self):
+
+        if(self.create_thread_dialog.content_cls.text == ""):
+            return
+        
+        self.create_thread_button.disabled = True
+        self.create_thread_button.disabled_color = [245/255, 245/255, 245/255, 1]
+        self.create_thread_spinner.color = self.theme_color
+        self.create_thread_spinner.active = True
+
+        threading.Thread(target=self.create_thread_thread).start()
+
+    def create_thread_dialog_callback(self):
+
+        self.create_thread_spinner = MDSpinner(
+            color=[1, 1, 1, 1],
+            size_hint=(None, None),
+            size=(dp(16), dp(16)),
+            line_width=1.5,
+            active=False
+        )
+
+        self.create_thread_button = MDFlatButton(
+            self.create_thread_spinner,
+            text="CREATE",
+            on_release=lambda x: self.create_thread()
+        )
+
+        self.create_thread_dialog = MDDialog(
+            title="Create Thread",
+            type="custom",
+            content_cls=MDTextField(
+                hint_text="Thread Name",
+                line_color_focus=self.theme_color,
+                hint_text_color_focus=self.theme_color,
+                text_color_focus="black",
+                mode="rectangle"
+            ),
+            buttons=[
+                MDFlatButton(
+                    text="CANCEL",
+                    on_release=lambda x: self.create_thread_dialog.dismiss()
+                ),
+                self.create_thread_button
+            ],
+            auto_dismiss=False
+        )
+        self.create_thread_dialog.open()
+
+    def forums_leave(self):
+        pass
+    
+    def delete_thread_thread(self):
+        url = self.domain + "/api/delete_thread/"
+
+        data = {
+            "username": self.config_dict["username"],
+            "thread_name": self.control_dict["delete_thread_name"],
+            "session_id": self.config_dict["session_id"],
+        }
+
+        try:
+            response = requests.post(url, data=data)
+        except:
+            self.create_thread_dialog.dismiss()
+            self.control_dict["delete_thread_snackbar_message"] = "Failed to connect to server."
+            self.control_dict["delete_thread_snackbar"] = True
+            return
+
+        self.delete_thread_dialog.dismiss()
+        self.control_dict["delete_thread_snackbar_message"] = response.json()[
+            "message"]
+        self.control_dict["delete_thread_snackbar"] = True
+
+    def delete_thread(self):
+        self.delete_thread_button.disabled = True
+        self.delete_thread_button.disabled_color = [245/255, 245/255, 245/255, 1]
+        self.delete_thread_spinner.color = self.theme_color
+        self.delete_thread_spinner.active = True
+
+        threading.Thread(target=self.delete_thread_thread).start()
+
+    def delete_thread_dialog_callback(self, thread_name):
+        
+        self.control_dict["delete_thread_name"] = thread_name
+
+        self.delete_thread_spinner = MDSpinner(
+            color=[1, 1, 1, 1],
+            size_hint=(None, None),
+            size=(dp(16), dp(16)),
+            line_width=1.5,
+            active=False
+        )
+
+        self.delete_thread_button = MDFlatButton(
+            self.delete_thread_spinner,
+            text="DELETE",
+            on_release=lambda x: self.delete_thread()
+        )
+        
+        self.delete_thread_dialog = MDDialog(
+            title="Delete Thread!",
+            text="Are you sure you want to delete this thread?",
+            size_hint=(0.9, 0.2),
+            buttons=[
+                MDFlatButton(
+                    text="CANCEL",
+                    on_release=lambda x: self.delete_thread_dialog.dismiss()
+                ),
+                self.delete_thread_button
+            ],
+            auto_dismiss=False
+        )
+
+        self.delete_thread_dialog.open()
+
+    def expand_thread(self, thread_name):
+        pass
+
     def temp(self):
         if (DEBUG):
-            print(self.config_dict)
-            print(self.control_dict)
-            print((os.path.join(os.path.join(os.path.expanduser('~'), 'Downloads'), 'test.txt')))
-            # self.root.transition.direction = "left"
-            # self.root.current = "home"
+            # print(self.config_dict)
+            # print()
+            # print(self.control_dict)
+        
+            try:
+                child_list = []
+                for child in self.root.ids.thread_list.children:
+                    child_list.append(child)
+                for child in child_list:
+                    self.root.ids.thread_list.remove_widget(child)
+            except:
+                pass
 
     def on_start(self):
         if (DEBUG):
@@ -1806,6 +2201,7 @@ class App(MDApp):
 
     def build(self):
         return Builder.load_string(UI)
+
 
 if __name__ == "__main__":
     App().run()

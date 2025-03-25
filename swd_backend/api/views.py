@@ -314,4 +314,122 @@ class FileListAPIView(APIView):
         
         else:
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CreateThreadAPIView(APIView):
+
+    def post(self, request):
+
+        serializers = CreateThreadSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+
+            if(database.if_thread_exists(request.data["thread_name"])):
+                database.close()
+                return Response({"message": "Thread already exists!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            database.create_thread(request.data["username"], request.data["thread_name"])
+            database.close()
+
+            return Response({"message": "Thread created successfully!"}, status = status.HTTP_201_CREATED)
         
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class PostReplyAPIView(APIView):
+
+    def post(self, request):
+
+        serializers = PostReplySerializer(data = request.data)
+
+        if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            database.post_reply(request.data["username"], request.data["thread_name"], request.data["reply"])
+            database.close()
+
+            return Response({"message": "Reply posted successfully!"}, status = status.HTTP_201_CREATED)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class ListThreadsAPIView(APIView):
+
+    def post(self, request):
+
+        serializers = ListThreadsSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            threads = database.list_threads()
+            database.close()
+
+            return Response({"threads": threads}, status = status.HTTP_200_OK)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class ListRepliesAPIView(APIView):
+
+    def post(self, request):
+
+        serializers = ListRepliesSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            replies = database.list_replies(request.data["thread_name"])
+            database.close()
+
+            return Response({"replies": replies}, status = status.HTTP_200_OK)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class DeleteThreadAPIView(APIView):
+
+    def post(self, request):
+
+        serializers = DeleteThreadSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            database.delete_thread(request.data["thread_name"])
+            database.close()
+
+            return Response({"message": "Thread deleted successfully!"}, status = status.HTTP_200_OK)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)

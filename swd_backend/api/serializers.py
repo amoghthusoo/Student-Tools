@@ -71,3 +71,33 @@ class FileListSerializer(serializers.Serializer):
     
     username = serializers.CharField(max_length = 256)
     session_id = serializers.CharField()
+
+class CreateThreadSerializer(serializers.Serializer):
+
+    username = serializers.CharField(max_length = 256)
+    thread_name = serializers.CharField(max_length = 256)
+    session_id = serializers.CharField()
+
+class PostReplySerializer(serializers.Serializer):
+
+    username = serializers.CharField(max_length = 256)
+    thread_name = serializers.CharField(max_length = 256)
+    reply = serializers.CharField(max_length = 8192)
+    session_id = serializers.CharField()
+
+class ListThreadsSerializer(serializers.Serializer):
+
+    username = serializers.CharField(max_length = 256)
+    session_id = serializers.CharField()
+
+class ListRepliesSerializer(serializers.Serializer):
+
+    username = serializers.CharField(max_length = 256)
+    thread_name = serializers.CharField(max_length = 256)
+    session_id = serializers.CharField()
+
+class DeleteThreadSerializer(serializers.Serializer):
+
+    username = serializers.CharField(max_length = 256)
+    thread_name = serializers.CharField(max_length = 256)
+    session_id = serializers.CharField()

@@ -13,4 +13,10 @@ urlpatterns = [
     path("download_file/", FileDownloadAPIView.as_view(), name = "download_file"),
     path("delete_file/", FileDeleteAPIView.as_view(), name = "delete_file"),
     path("list_files/", FileListAPIView.as_view(), name = "list_files"),
+
+    path("create_thread/", CreateThreadAPIView.as_view(), name = "create_thread"),
+    path("post_reply/", PostReplyAPIView.as_view(), name = "post_reply"),
+    path("list_threads/", ListThreadsAPIView.as_view(), name = "list_threads"),
+    path("list_replies/", ListRepliesAPIView.as_view(), name = "list_replies"),
+    path("delete_thread/", DeleteThreadAPIView.as_view(), name = "delete_thread"),
 ]
