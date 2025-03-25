@@ -56,6 +56,7 @@ class Database:
 
         self.crs.execute("""
         create table if not exists threads(
+                        thread_id int auto_increment primary key,
                         username varchar(256),
                         thread_name varchar(256)
                         );
@@ -63,6 +64,7 @@ class Database:
 
         self.crs.execute("""
         create table if not exists thread_replies(
+                        reply_id int auto_increment primary key,
                         thread_name varchar(256),
                         username varchar(256),
                         reply varchar(8192)
@@ -293,19 +295,19 @@ class Database:
     def create_thread(self, username, thread_name):
         
         self.crs.execute("""
-        insert into threads values (%s, %s);
+        insert into threads(username, thread_name) values (%s, %s);
         """, (username, thread_name))
 
-    def post_reply(self, username, thread_name, reply):
+    def post_reply(self, thread_name, username, reply):
         
         self.crs.execute("""
-        insert into thread_replies values (%s, %s, %s);
+        insert into thread_replies(thread_name, username, reply) values (%s, %s, %s);
         """, (thread_name, username, reply))
 
     def list_threads(self):
         
         self.crs.execute("""
-        select * from threads;
+        select username, thread_name from threads;
         """)
 
         result = self.crs.fetchall()
@@ -317,6 +319,9 @@ class Database:
         self.crs.execute("""
         delete from threads where thread_name = %s;
         """, (thread_name,))
+    
+    def list_replies(self):
+        pass
         
     def close(self):
         self.hdl.close()
