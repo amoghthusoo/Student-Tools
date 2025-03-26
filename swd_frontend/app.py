@@ -2039,7 +2039,8 @@ class App(MDApp):
         threading.Thread(target=self.forums_press_thread).start()
 
     def create_thread_thread(self):
-        
+
+
         url = self.domain + "/api/create_thread/"
 
         data = {
@@ -2074,6 +2075,7 @@ class App(MDApp):
         threading.Thread(target=self.create_thread_thread).start()
 
     def create_thread_dialog_callback(self):
+
 
         self.create_thread_spinner = MDSpinner(
             color=[1, 1, 1, 1],
