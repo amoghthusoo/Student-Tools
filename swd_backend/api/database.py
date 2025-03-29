@@ -319,6 +319,10 @@ class Database:
         self.crs.execute("""
         delete from threads where thread_name = %s;
         """, (thread_name,))
+
+        self.crs.execute("""
+        delete from thread_replies where thread_name = %s;
+        """, (thread_name,))
     
     def list_replies(self, thread_name):
         

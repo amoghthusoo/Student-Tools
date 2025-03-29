@@ -1365,27 +1365,10 @@ class App(MDApp):
 
 
             for reply in self.control_dict["replies"]:
-
-                # md_relative_layout = MDRelativeLayout()
-
-                # label = MDLabel(
-                #         text = f"{reply[0]} : {reply[1]}",
-                #         color = "grey",
-                #         pos = ("12dp", "12dp"),
-                #         # size_hint = (0.9, None)
-                #     )
-                
-
-                # message = MDLabel(text = f"{reply[0]} : {reply[1]}")
-                # message.adaptive_height = True
-                # self.root.ids.replies_list.add_widget(message)
                 
                 message = MDLabel(text = f"{reply[0]} : {reply[1]}")
                 message.adaptive_height = True
-                # message.md_bg_color = [123/255, 2/255, 144/255, 100/255]
-                # message.color = [1, 1, 1, 1]
-                    
-                # message.adaptive_height = True
+            
                 self.root.ids.replies_list.add_widget(message)
                 self.root.ids.replies_list.add_widget(
                     MDBoxLayout(
@@ -1394,26 +1377,6 @@ class App(MDApp):
                         md_bg_color = [1, 0, 1, 1]
                     )  # Thin horizontal line
                 )
-
-                # label.height = label.texture_siz`e[1]
-                
-                # md_relative_layout.add_widget(
-                #     label
-                # )
-
-                # self.root.ids.replies_list.add_widget(
-                #     label
-                    # MDCard(
-                    #     md_relative_layout,
-                    #     # md_bg_color=[123/255, 2/255, 144/255, 100/255],
-                    #     size_hint=(1, None),
-                    #     height = "100dp",
-                    #     pos_hint={"center_x": .5, "center_y": .5},
-                    #     # on_release=lambda x: self.expand_thread(x.id)
-                    # )
-                # )
-
-            
 
     def select_path(self, path):
         '''
@@ -2419,6 +2382,7 @@ class App(MDApp):
         self.root.transition = MDSlideTransition()
         self.root.transition.direction = "right"
         self.root.current = "home"
+        self.control_dict["replies"] = []
 
         try:
             child_list = []
@@ -2430,6 +2394,7 @@ class App(MDApp):
             pass
 
     def expand_thread(self, thread_name):
+        
         self.control_dict["current_thread"] = thread_name
         self.root.ids.thread_discussions_screen_top_app_bar.title = thread_name
         self.root.transition = MDSlideTransition()
@@ -2474,6 +2439,7 @@ class App(MDApp):
 
     def show_replies_thread(self):
 
+        print("reaching this thread...")
         url = self.domain + "/api/list_replies/"
         data = {
             "thread_name": self.control_dict["current_thread"],
@@ -2502,7 +2468,6 @@ class App(MDApp):
     def show_replies(self):
 
         if (self.control_dict["replies"] == None):
-            print("reaching...")
             self.replies_spinner = MDSpinner(
                 color=self.theme_color,
                 size_hint=(None, None),
@@ -2517,9 +2482,13 @@ class App(MDApp):
 
     def temp(self):
         if (DEBUG):
-            print(self.config_dict)
+
+            for key, value in self.config_dict.items():
+                print(f"{key}: {value}")
             print()
-            print(self.control_dict)
+            for key, value in self.control_dict.items():
+                print(f"{key}: {value}")
+        
 
     def on_start(self):
         if (DEBUG):
