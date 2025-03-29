@@ -357,7 +357,7 @@ class PostReplyAPIView(APIView):
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
-            database.post_reply(request.data["username"], request.data["thread_name"], request.data["reply"])
+            database.post_reply(request.data["thread_name"], request.data["username"], request.data["reply"])
             database.close()
 
             return Response({"message": "Reply posted successfully!"}, status = status.HTTP_201_CREATED)

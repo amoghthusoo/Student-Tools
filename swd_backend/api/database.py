@@ -320,8 +320,15 @@ class Database:
         delete from threads where thread_name = %s;
         """, (thread_name,))
     
-    def list_replies(self):
-        pass
+    def list_replies(self, thread_name):
+        
+        self.crs.execute("""
+        select username, reply from thread_replies where thread_name = %s;
+        """, (thread_name,))
+
+        result = self.crs.fetchall()
+
+        return result
         
     def close(self):
         self.hdl.close()

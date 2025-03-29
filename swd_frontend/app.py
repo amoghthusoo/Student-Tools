@@ -697,6 +697,90 @@ MDScreenManager:
                         selected_color: [1, 0, 0, 1]
                         on_release : app.nav_drawer_logout()
         MDWidget: 
+    
+    MDScreen:
+
+        id : thread_discussions
+        name : "thread_discussions"
+
+        MDBoxLayout:
+
+            id : thread_replies
+            orientation : "vertical"
+            spacing : "0dp"
+            # md_bg_color : [1, 0, 0, 1]
+            
+
+            MDTopAppBar:
+
+                id : thread_discussions_screen_top_app_bar
+                title : ""
+                left_action_items : [["arrow-left", lambda x : app.redirect_to_threads_page()]]
+                right_action_items : [["dots-vertical", lambda x: app.temp()]]
+                md_bg_color : app.theme_color
+                elevation : 0
+
+            MDScrollView:
+
+                do_scroll_x: False
+                do_scroll_y: True
+
+                # MDList:
+                #     id : replies_list
+                #     spacing : "50dp"
+
+                MDBoxLayout:
+                    # md_bg_color : [1, 0, 0, 1]
+                    id : replies_list
+                    spacing : "10dp"
+                    padding : "15dp"
+
+                    size: (self.parent.width, self.parent.height-1)
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                # MDList:
+                #     id : replies_list
+                #     spacing : "10dp"
+                #     padding : "10dp"
+
+            MDBoxLayout:
+
+                orientation : "horizontal"
+                spacing : "10dp"
+                padding : "10dp"
+                size_hint: (1, 0.1)
+
+                MDTextField:
+                    id : post_reply_message_box
+                    mode : "round"
+                    hint_text: "Message"
+                    line_color_focus : app.theme_color
+                    hint_text_color_focus : app.theme_color
+                    text_color_focus: "black"  
+                    size_hint : (0.1, 1)
+                    pos_hint : {"center_x" : 0.5, "center_y" : 0.5}
+                
+                MDFloatingActionButton:
+                    id : post_reply_button
+                    icon : "send"
+                    md_bg_color : app.theme_color
+                    pos_hint : {"center_x" : 0.5, "center_y" : 0.5}
+                    on_release : app.post_reply()
+
+                    elevation : 0
+                    shadow_softness : 80
+                    shadow_softness_size : 2
+
+                    MDSpinner:
+                        id : post_reply_spinner
+                        color : [1, 1, 1, 1]
+                        size_hint: None, None
+                        size: dp(16), dp(16)
+                        line_width : 1.5
+                        active: False
+
 """
 
 
@@ -753,9 +837,20 @@ class App(MDApp):
             "create_thread_snackbar": False,
             "create_thread_snackbar_message": None,
 
-            "delete_thread_snackbar" : False,
-            "delete_thread_snackbar_message" : None,
-            "delete_thread_name" : None,
+            "delete_thread_snackbar": False,
+            "delete_thread_snackbar_message": None,
+            "delete_thread_name": None,
+
+            "current_thread": None,
+            "post_reply_snackbar_message": None,
+            "post_reply_snackbar": False,
+            "replies": None,
+
+            "replies_snackbar_message": None,
+            "replies_snackbar": False,
+            "replies_message": None,
+            "show_replies_message": False,
+            "show_replies": False
         }
 
         Clock.schedule_interval(self.control_method, 1/10)
@@ -1093,18 +1188,18 @@ class App(MDApp):
             except:
                 pass
 
-
             for thread in self.control_dict["threads"]:
 
                 md_relative_layout = MDRelativeLayout()
-                
-                if(self.config_dict["username"] == thread[0]):
+
+                if (self.config_dict["username"] == thread[0]):
                     md_relative_layout.add_widget(
                         MDIconButton(
-                            id = thread[1],
+                            id=thread[1],
                             icon="delete",
                             pos_hint={"top": 1, "right": 1},
-                            on_release = lambda x : self.delete_thread_dialog_callback(x.id),
+                            on_release=lambda x: self.delete_thread_dialog_callback(
+                                x.id),
                         )
                     )
 
@@ -1128,11 +1223,12 @@ class App(MDApp):
                 self.root.ids.thread_list.add_widget(
                     MDCard(
                         md_relative_layout,
+                        id=f"{thread[1]}",
                         md_bg_color=[123/255, 2/255, 144/255, 100/255],
                         size_hint=(1, None),
                         height="150dp",
                         pos_hint={"center_x": .5, "center_y": .5},
-                        on_release=lambda x: self.expand_thread("thread_name")
+                        on_release=lambda x: self.expand_thread(x.id)
                     )
                 )
 
@@ -1158,7 +1254,7 @@ class App(MDApp):
                 duration=1.5
             ).open()
 
-        if(self.control_dict["create_thread_snackbar"]):
+        if (self.control_dict["create_thread_snackbar"]):
 
             self.control_dict["create_thread_snackbar"] = False
             self.create_thread_spinner.active = False
@@ -1174,7 +1270,7 @@ class App(MDApp):
                 duration=1.5
             ).open()
 
-        if(self.control_dict["delete_thread_snackbar"]):
+        if (self.control_dict["delete_thread_snackbar"]):
 
             self.control_dict["delete_thread_snackbar"] = False
             self.delete_thread_spinner.active = False
@@ -1190,6 +1286,134 @@ class App(MDApp):
                 duration=1.5
             ).open()
 
+        if (self.control_dict["post_reply_snackbar"]):
+
+            self.control_dict["post_reply_snackbar"] = False
+            self.root.ids.post_reply_spinner.active = False
+            self.root.ids.post_reply_button.disabled = False
+            self.root.ids.post_reply_message_box.text = ""
+
+            Snackbar(
+                text=self.control_dict["post_reply_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+
+            self.show_replies()
+
+        if (self.control_dict["replies_snackbar"]):
+
+            self.control_dict["replies_snackbar"] = False
+            self.replies_spinner.active = False
+
+            Snackbar(
+                text=self.control_dict["replies_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+
+        if (self.control_dict["show_replies_message"]):
+
+            self.control_dict["show_replies_message"] = False
+            self.replies_spinner.active = False
+
+            try:
+                self.root.ids.thread_replies.remove_widget(
+                    self.replies_message)
+            except:
+                pass
+            try:
+                self.root.ids.thread_replies.remove_widget(
+                    self.replies_spinner)
+            except:
+                pass
+
+            self.replies_message = MDLabel(
+                text=self.control_dict["replies_message"],
+                halign="center"
+            )
+            self.root.ids.thread_discussions.add_widget(self.replies_message)
+
+        if (self.control_dict["show_replies"]):
+
+            self.control_dict["show_replies"] = False
+            self.replies_spinner.active = False
+
+            try:
+                self.root.ids.thread_discussions.remove_widget(
+                    self.replies_message)
+            except:
+                pass
+            try:
+                self.root.ids.thread_discussions.remove_widget(
+                    self.replies_spinner)
+            except:
+                pass
+
+            try:
+                child_list = []
+                for child in self.root.ids.replies_list.children:
+                    child_list.append(child)
+                for child in child_list:
+                    self.root.ids.replies_list.remove_widget(child)
+            except:
+                pass
+
+
+            for reply in self.control_dict["replies"]:
+
+                # md_relative_layout = MDRelativeLayout()
+
+                # label = MDLabel(
+                #         text = f"{reply[0]} : {reply[1]}",
+                #         color = "grey",
+                #         pos = ("12dp", "12dp"),
+                #         # size_hint = (0.9, None)
+                #     )
+                
+
+                # message = MDLabel(text = f"{reply[0]} : {reply[1]}")
+                # message.adaptive_height = True
+                # self.root.ids.replies_list.add_widget(message)
+                
+                message = MDLabel(text = f"{reply[0]} : {reply[1]}")
+                message.adaptive_height = True
+                # message.md_bg_color = [123/255, 2/255, 144/255, 100/255]
+                # message.color = [1, 1, 1, 1]
+                    
+                # message.adaptive_height = True
+                self.root.ids.replies_list.add_widget(message)
+                self.root.ids.replies_list.add_widget(
+                    MDBoxLayout(
+                        size_hint=(1, None),
+                        height="1dp",
+                        md_bg_color = [1, 0, 1, 1]
+                    )  # Thin horizontal line
+                )
+
+                # label.height = label.texture_siz`e[1]
+                
+                # md_relative_layout.add_widget(
+                #     label
+                # )
+
+                # self.root.ids.replies_list.add_widget(
+                #     label
+                    # MDCard(
+                    #     md_relative_layout,
+                    #     # md_bg_color=[123/255, 2/255, 144/255, 100/255],
+                    #     size_hint=(1, None),
+                    #     height = "100dp",
+                    #     pos_hint={"center_x": .5, "center_y": .5},
+                    #     # on_release=lambda x: self.expand_thread(x.id)
+                    # )
+                # )
+
+            
 
     def select_path(self, path):
         '''
@@ -1780,8 +2004,19 @@ class App(MDApp):
         self.control_dict["delete_thread_snackbar_message"] = None
         self.control_dict["delete_thread_name"] = None
 
+        self.control_dict["current_name"] = None
+        self.control_dict["post_reply_snackbar_message"] = None
+        self.control_dict["post_reply_snackbar"] = False
+        self.control_dict["replies"] = None
+
+        self.control_dict["replies_snackbar_message"] = None
+        self.control_dict["replies_snackbar"] = False
+        self.control_dict["replies_message"] = None
+        self.control_dict["show_replies_message"] = False
+        self.control_dict["show_replies"] = False
+
     def reset_screens(self):
-        
+
         try:
             child_list = []
             for child in self.root.ids.thread_list.children:
@@ -1805,7 +2040,6 @@ class App(MDApp):
         self.control_dict["logout_snackbar_message"] = response.json()[
             "message"]
         self.control_dict["logout"] = True
-
 
     def logout(self):
 
@@ -2040,7 +2274,6 @@ class App(MDApp):
 
     def create_thread_thread(self):
 
-
         url = self.domain + "/api/create_thread/"
 
         data = {
@@ -2064,18 +2297,18 @@ class App(MDApp):
 
     def create_thread(self):
 
-        if(self.create_thread_dialog.content_cls.text == ""):
+        if (self.create_thread_dialog.content_cls.text == ""):
             return
-        
+
         self.create_thread_button.disabled = True
-        self.create_thread_button.disabled_color = [245/255, 245/255, 245/255, 1]
+        self.create_thread_button.disabled_color = [
+            245/255, 245/255, 245/255, 1]
         self.create_thread_spinner.color = self.theme_color
         self.create_thread_spinner.active = True
 
         threading.Thread(target=self.create_thread_thread).start()
 
     def create_thread_dialog_callback(self):
-
 
         self.create_thread_spinner = MDSpinner(
             color=[1, 1, 1, 1],
@@ -2114,7 +2347,7 @@ class App(MDApp):
 
     def forums_leave(self):
         pass
-    
+
     def delete_thread_thread(self):
         url = self.domain + "/api/delete_thread/"
 
@@ -2139,14 +2372,15 @@ class App(MDApp):
 
     def delete_thread(self):
         self.delete_thread_button.disabled = True
-        self.delete_thread_button.disabled_color = [245/255, 245/255, 245/255, 1]
+        self.delete_thread_button.disabled_color = [
+            245/255, 245/255, 245/255, 1]
         self.delete_thread_spinner.color = self.theme_color
         self.delete_thread_spinner.active = True
 
         threading.Thread(target=self.delete_thread_thread).start()
 
     def delete_thread_dialog_callback(self, thread_name):
-        
+
         self.control_dict["delete_thread_name"] = thread_name
 
         self.delete_thread_spinner = MDSpinner(
@@ -2162,7 +2396,7 @@ class App(MDApp):
             text="DELETE",
             on_release=lambda x: self.delete_thread()
         )
-        
+
         self.delete_thread_dialog = MDDialog(
             title="Delete Thread!",
             text="Are you sure you want to delete this thread?",
@@ -2179,23 +2413,113 @@ class App(MDApp):
 
         self.delete_thread_dialog.open()
 
+    def redirect_to_threads_page(self):
+
+        self.control_dict["current_name"] = None
+        self.root.transition = MDSlideTransition()
+        self.root.transition.direction = "right"
+        self.root.current = "home"
+
+        try:
+            child_list = []
+            for child in self.root.ids.replies_list.children:
+                child_list.append(child)
+            for child in child_list:
+                self.root.ids.replies_list.remove_widget(child)
+        except:
+            pass
+
     def expand_thread(self, thread_name):
-        pass
+        self.control_dict["current_thread"] = thread_name
+        self.root.ids.thread_discussions_screen_top_app_bar.title = thread_name
+        self.root.transition = MDSlideTransition()
+        self.root.transition.direction = "left"
+        self.root.current = "thread_discussions"
+        self.show_replies()
+
+    def post_reply_thread(self):
+
+        url = self.domain + "/api/post_reply/"
+
+        data = {
+            "username": self.config_dict["username"],
+            "thread_name": self.control_dict["current_thread"],
+            "reply": self.root.ids.post_reply_message_box.text,
+            "session_id": self.config_dict["session_id"]
+        }
+
+        try:
+            response = requests.post(url, data=data)
+        except:
+            self.root.ids.post_reply_spinner.active = False
+            self.control_dict["post_reply_snackbar_message"] = "Failed to connect to server."
+            self.control_dict["post_reply_snackbar"] = True
+            return
+
+        self.control_dict["post_reply_snackbar_message"] = response.json()[
+            "message"]
+        self.control_dict["post_reply_snackbar"] = True
+
+    def post_reply(self):
+
+        if (self.root.ids.post_reply_message_box.text == ""):
+            return
+
+        self.root.ids.post_reply_button.disabled = True
+        self.root.ids.post_reply_button.md_bg_color_disabled = self.theme_color
+        self.root.ids.post_reply_button.disabled_color = self.theme_color
+        self.root.ids.post_reply_spinner.active = True
+
+        threading.Thread(target=self.post_reply_thread).start()
+
+    def show_replies_thread(self):
+
+        url = self.domain + "/api/list_replies/"
+        data = {
+            "thread_name": self.control_dict["current_thread"],
+            "username": self.config_dict["username"],
+            "session_id": self.config_dict["session_id"],
+        }
+
+        try:
+            response = requests.post(url, data=data)
+        except:
+            self.replies_spinner.active = False
+            self.control_dict["replies_snackbar_message"] = "Failed to connect to server."
+            self.control_dict["replies_snackbar"] = True
+            return
+
+        replies = response.json()["replies"]
+
+        if (replies != self.control_dict["replies"]):
+            self.control_dict["replies"] = replies
+            if (len(replies) == 0):
+                self.control_dict["replies_message"] = "No replies found."
+                self.control_dict["show_replies_message"] = True
+            else:
+                self.control_dict["show_replies"] = True
+
+    def show_replies(self):
+
+        if (self.control_dict["replies"] == None):
+            print("reaching...")
+            self.replies_spinner = MDSpinner(
+                color=self.theme_color,
+                size_hint=(None, None),
+                size=(dp(32), dp(32)),
+                line_width=2,
+                active=True,
+                pos_hint={'center_x': .5, 'center_y': .5}
+            )
+            self.root.ids.thread_discussions.add_widget(self.replies_spinner)
+
+        threading.Thread(target=self.show_replies_thread).start()
 
     def temp(self):
         if (DEBUG):
-            # print(self.config_dict)
-            # print()
-            # print(self.control_dict)
-        
-            try:
-                child_list = []
-                for child in self.root.ids.thread_list.children:
-                    child_list.append(child)
-                for child in child_list:
-                    self.root.ids.thread_list.remove_widget(child)
-            except:
-                pass
+            print(self.config_dict)
+            print()
+            print(self.control_dict)
 
     def on_start(self):
         if (DEBUG):

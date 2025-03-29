@@ -92,8 +92,8 @@ class ListThreadsSerializer(serializers.Serializer):
 
 class ListRepliesSerializer(serializers.Serializer):
 
-    username = serializers.CharField(max_length = 256)
     thread_name = serializers.CharField(max_length = 256)
+    username = serializers.CharField(max_length = 256)
     session_id = serializers.CharField()
 
 class DeleteThreadSerializer(serializers.Serializer):
