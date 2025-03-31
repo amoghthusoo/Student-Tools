@@ -433,3 +433,155 @@ class DeleteThreadAPIView(APIView):
         
         else:
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class AddCourseAPIView(APIView):
+
+    def post(self, request):
+
+        serializers = AddCourseSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if(database.course_exists(request.data["username"], request.data["course_code"], request.data["course_name"], request.data["batch"])):
+                database.close()
+                return Response({"message": "Course already exists!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            database.add_course(request.data["username"], request.data["course_code"], request.data["course_name"], request.data["batch"])
+            database.close()
+
+            return Response({"message": "Course added successfully!"}, status = status.HTTP_201_CREATED)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class ListCoursesAPIView(APIView):
+
+    def post(self, request):
+
+        serializers = ListCoursesSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            courses = database.list_courses(request.data["username"])
+            database.close()
+
+            return Response({"courses": courses}, status = status.HTTP_200_OK)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class AddStudentAPIView(APIView):
+
+    def post(self, request):
+
+        serializers = AddStudentSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if(database.user_exists(request.data["student_username"]) == False):
+                database.close()
+                return Response({"message": "Student does not exist!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if(database.student_exists(request.data["student_username"], request.data["course_code"], request.data["batch"])):
+                database.close()
+                return Response({"message": "Student already exists!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            database.add_student(request.data["course_code"], request.data["batch"], request.data["student_username"], request.data["mac_address"])
+            database.close()
+
+            return Response({"message": "Student added successfully!"}, status = status.HTTP_201_CREATED)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class ListStudentsAPIView(APIView):
+
+    def post(self, request):
+
+        serializers = ListStudentsSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            students = database.list_students(request.data["course_code"], request.data["batch"])
+            database.close()
+
+            return Response({"students": students}, status = status.HTTP_200_OK)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class MarkAttendanceAPIView(APIView):
+
+    def post(self, request):
+
+        serializers = MarkAttendanceSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            print(type(request.data["students"]))
+            
+            database.mark_attendance(request.data["course_code"], request.data["batch"], request.data["students"])
+            database.close()
+
+            return Response({"message": "Attendance marked successfully!"}, status = status.HTTP_201_CREATED)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class ListAttendanceAPIView(APIView):
+
+    def post(self, request):
+
+        serializers = ListAttendanceSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+
+            database = Database()
+            database.create_tables()
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            attendance = database.list_attendance(request.data["username"])
+            database.close()
+
+            return Response({"attendance": attendance}, status = status.HTTP_200_OK)
+        
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)

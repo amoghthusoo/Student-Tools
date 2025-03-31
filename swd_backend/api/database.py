@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-HOSTED_DB = False
+HOSTED_DB = True
 
 class Database:
 
@@ -68,6 +68,34 @@ class Database:
                         thread_name varchar(256),
                         username varchar(256),
                         reply varchar(8192)
+                        );
+        """)
+
+        self.crs.execute("""
+        create table if not exists courses(
+                        tuple_id int auto_increment primary key,
+                        faculty_username varchar(256),
+                        course_code varchar(256),
+                        course_name varchar(256),
+                        batch varchar(256)
+                        );
+        """)
+
+        self.crs.execute("""
+        create table if not exists students(
+                        student_username varchar(256) primary key,
+                        mac_address varchar(32)
+                        );
+        """)
+
+        self.crs.execute("""
+        create table if not exists attendance(
+                        tuple_id int auto_increment primary key,
+                        course_code varchar(256),
+                        batch varchar(256),
+                        student_username varchar(256),
+                        attendance int,
+                        total_classes int
                         );
         """)
 
@@ -333,7 +361,96 @@ class Database:
         result = self.crs.fetchall()
 
         return result
+    
+    def course_exists(self, username, course_code, course_name, batch):
+
+        self.crs.execute("""
+        select * from courses where faculty_username = %s and course_code = %s and course_name = %s and batch = %s;
+        """, (username, course_code, course_name, batch))
+
+        result = self.crs.fetchone()
+
+        if(result):
+            return True
+        else:
+            return False
         
+    def add_course(self, username, course_code, course_name, batch):
+        
+        self.crs.execute("""
+        insert into courses(faculty_username, course_code, course_name, batch) values (%s, %s, %s, %s);
+        """, (username, course_code, course_name, batch))
+
+    def list_courses(self, username):
+        
+        self.crs.execute("""
+        select course_code, course_name, batch from courses where faculty_username = %s;
+        """, (username,))
+
+        result = self.crs.fetchall()
+
+        return result
+    
+    def student_exists(self, student_username, course_code, batch):
+
+        self.crs.execute("""
+        select * from attendance where student_username = %s and course_code = %s and batch = %s;
+        """, (student_username, course_code, batch))
+
+        result = self.crs.fetchone()
+
+        if(result):
+            return True
+        else:
+            return False
+        
+    def add_student(self, course_code, batch, student_username, mac_address):
+        
+        self.crs.execute("""
+        select * from students where student_username = %s and mac_address = %s;
+        """, (student_username, mac_address))
+
+        if(not self.crs.fetchone()):
+            self.crs.execute("""
+            insert into students values (%s, %s);
+            """, (student_username, mac_address))
+
+        self.crs.execute("""
+        insert into attendance(course_code, batch, student_username, attendance, total_classes) values (%s, %s, %s, 0, 0);
+        """, (course_code, batch, student_username))
+
+    def list_students(self, course_code, batch):
+        
+        self.crs.execute("""
+        select student_username, mac_address from students natural join attendance where course_code = %s and batch = %s;
+        """, (course_code, batch))
+
+        result = self.crs.fetchall()
+
+        return result
+
+    def mark_attendance(self, course_code, batch, students):
+        
+        for student, attendance in students.items():
+            if(attendance):
+                self.crs.execute("""
+                update attendance set attendance = attendance + 1 where course_code = %s and batch = %s and student_username = %s;
+                """, (course_code, batch, student))
+
+        self.crs.execute("""
+        update attendance set total_classes = total_classes + 1 where course_code = %s and batch = %s;
+        """, (course_code, batch))
+
+    def list_attendance(self, username):
+            
+            self.crs.execute("""
+            select course_name, course_code, batch, attendance, total_classes from attendance natural join courses where student_username = %s;
+            """, (username,))
+    
+            result = self.crs.fetchall()
+    
+            return result
+
     def close(self):
         self.hdl.close()
 

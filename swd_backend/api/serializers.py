@@ -101,3 +101,45 @@ class DeleteThreadSerializer(serializers.Serializer):
     username = serializers.CharField(max_length = 256)
     thread_name = serializers.CharField(max_length = 256)
     session_id = serializers.CharField()
+
+class AddCourseSerializer(serializers.Serializer):
+
+    username = serializers.CharField(max_length = 256)  # Faculty username
+    course_code = serializers.CharField(max_length = 256)
+    course_name = serializers.CharField(max_length = 256)
+    batch = serializers.CharField(max_length = 256)
+    session_id = serializers.CharField()
+
+class ListCoursesSerializer(serializers.Serializer):
+
+    username = serializers.CharField(max_length = 256)  # Faculty username
+    session_id = serializers.CharField()
+
+class AddStudentSerializer(serializers.Serializer):
+
+    username = serializers.CharField(max_length = 256)  # Faculty username
+    course_code = serializers.CharField(max_length = 256)
+    batch = serializers.CharField(max_length = 256)
+    student_username = serializers.CharField(max_length = 256)
+    mac_address = serializers.CharField(max_length = 32)
+    session_id = serializers.CharField()
+
+class ListStudentsSerializer(serializers.Serializer):
+
+    username = serializers.CharField(max_length = 256)  # Faculty username
+    course_code = serializers.CharField(max_length = 256)
+    batch = serializers.CharField(max_length = 256)
+    session_id = serializers.CharField()
+
+class MarkAttendanceSerializer(serializers.Serializer):
+
+    username = serializers.CharField(max_length = 256)  # Faculty username
+    course_code = serializers.CharField(max_length = 256)
+    batch = serializers.CharField(max_length = 256)
+    students = serializers.DictField()
+    session_id = serializers.CharField()
+
+class ListAttendanceSerializer(serializers.Serializer):
+
+    username = serializers.CharField(max_length = 256)  
+    session_id = serializers.CharField()

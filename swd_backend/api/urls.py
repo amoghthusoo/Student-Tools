@@ -19,4 +19,11 @@ urlpatterns = [
     path("list_threads/", ListThreadsAPIView.as_view(), name = "list_threads"),
     path("list_replies/", ListRepliesAPIView.as_view(), name = "list_replies"),
     path("delete_thread/", DeleteThreadAPIView.as_view(), name = "delete_thread"),
+
+    path("add_course/", AddCourseAPIView.as_view(), name = "add_course"),
+    path("list_courses/", ListCoursesAPIView.as_view(), name = "list_courses"),
+    path("add_student/", AddStudentAPIView.as_view(), name = "add_student"),
+    path("list_students/", ListStudentsAPIView.as_view(), name = "list_students"),
+    path("mark_attendance/", MarkAttendanceAPIView.as_view(), name = "mark_attendance"),
+    path("list_attendance/", ListAttendanceAPIView.as_view(), name = "list_attendance"),
 ]

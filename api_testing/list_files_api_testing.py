@@ -5,7 +5,7 @@ url = "http://127.0.0.1:8000/api/list_files/"
 
 data = {
     "username" : "amogh",
-    "session_id" : "1969cb04-c9ad-44f3-9fa0-4970959e5dba"
+    "session_id" : "887eb5c9-5b1e-4f79-b73a-661b4d49f068"
 }
 
 response = requests.post(url, data = data)
