@@ -3,8 +3,8 @@ import requests
 url = "http://localhost:8000/api/list_courses/"
 
 data = {
-    "username" : "amogh",
-    "session_id" : "887eb5c9-5b1e-4f79-b73a-661b4d49f068"
+    "username" : "gauravsir",
+    "session_id" : "b17c8759-b824-4733-8b86-f95aa3b20030"
 }
 
 response = requests.post(url, data=data)

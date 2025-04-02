@@ -1,24 +1,14 @@
-from kivy.lang import Builder
-from kivy.uix.scrollview import ScrollView
-from kivymd.app import MDApp
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.label import MDLabel
-from kivy.metrics import dp  # Import dp for density-independent pixels
-from random import choice
+from datetime import datetime
+from time import sleep
+# Get the current date and time
 
-KV = '''
-MDLabel:
-    text : "Hello World;alskdfja;lskdfja;lsdkfj a;slkdfj ;alksdfj; alskfdj sad;lkfj "
-    halign : "center"
-    color : [1, 0, 0, 1]
-    md_bg_color : [0, 1, 0, 1]
-    adaptive_size : True
+# Print the current date and time
+while(True):
+    current_datetime = datetime.now()
+    current_date = current_datetime.date()
+    current_time = current_datetime.time()
+    print(current_date, current_time)
+    sleep(1)
 
-'''
-
-class TestApp(MDApp):
-    def build(self):
-        self.theme_cls.theme_style = "Light"
-        return Builder.load_string(KV)
-
-TestApp().run()
+print("Current date:", current_date)
+print("Current time:", current_time)

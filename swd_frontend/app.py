@@ -19,6 +19,7 @@ from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.card import MDCard
 from kivymd.uix.relativelayout import MDRelativeLayout
 from kivymd.uix.textfield import MDTextField
+from kivymd.uix.widget import MDWidget
 
 import os
 import requests
@@ -28,7 +29,6 @@ import re
 WINDOWS_MODE = True
 DEBUG = True
 LIVE_DOMAIN = False
-
 
 if (WINDOWS_MODE) == True:
     Window.size = (380, 768)
@@ -358,6 +358,7 @@ MDScreenManager:
                 id : home_screen_top_app_bar
                 title : "Sign up"
                 left_action_items : [["arrow-left", lambda x : app.redirect_to_sign_in_page()]]
+                right_action_items : [["dots-vertical", lambda x: app.temp()]]
                 md_bg_color : app.theme_color
                 elevation : 0
 
@@ -587,14 +588,18 @@ MDScreenManager:
 
                             MDBottomNavigationItem:
                                 
+                                id : dashboard
                                 name: "dashboard"
                                 text: "Dashboard"
                                 icon: "view-dashboard"
-                                
+                                on_tab_press : app.dashboard_press()
 
-                                MDLabel:
-                                    text: "Dashboard"
-                                    halign: "center"
+                                MDScrollView:
+                                    
+                                    MDList:
+                                        id : attendance_list
+                                        spacing : "10dp"
+                                        padding : "10dp"
 
                             MDBottomNavigationItem:
                                 id : docs
@@ -602,7 +607,7 @@ MDScreenManager:
                                 text: "Docs"
                                 icon: "file-multiple"
                                 on_tab_press : app.docs_press()
-                                on_leave : app.docs_leave()
+                                # on_leave : app.docs_leave()
 
 
                             MDBottomNavigationItem:
@@ -781,6 +786,32 @@ MDScreenManager:
                         line_width : 1.5
                         active: False
 
+    MDScreen:
+        id : mark_attendance_pre_screen
+        name : "mark_attendance_pre_screen"
+
+        MDBoxLayout:
+
+            orientation : "vertical"
+            spacing : "0dp"
+            # md_bg_color : [1, 0, 0, 1]
+            
+
+            MDTopAppBar:
+
+                title : "Select Course"
+                left_action_items : [["arrow-left", lambda x : app.redirect_to_dashboard()]]
+                right_action_items : [["dots-vertical", lambda x: app.temp()], ["plus", lambda x: app.add_course_dialog_callback()]]
+                md_bg_color : app.theme_color
+                elevation : 0
+
+            MDScrollView:
+                                    
+                MDList:
+                    id : courses_list
+                    spacing : "10dp"
+                    padding : "10dp"
+
 """
 
 
@@ -850,7 +881,27 @@ class App(MDApp):
             "replies_snackbar": False,
             "replies_message": None,
             "show_replies_message": False,
-            "show_replies": False
+            "show_replies": False,
+
+            "build_dashboard": False,
+            "attendance": None,
+            "attendance_snackbar_message": None,
+            "attendance_snackbar": False,
+
+            "attendance_message": None,
+            "show_attendance_message": False,
+            "show_attendance": False,
+
+            "courses" : None,
+            "courses_snackbar_message" : None,
+            "courses_snackbar" : False,
+
+            "courses_message" : None,
+            "show_courses_message" : False,
+            "show_courses" : False,
+
+            "add_course_snackbar_message" : None,
+            "add_course_snackbar" : False,
         }
 
         Clock.schedule_interval(self.control_method, 1/10)
@@ -1363,20 +1414,250 @@ class App(MDApp):
             except:
                 pass
 
-
             for reply in self.control_dict["replies"]:
-                
-                message = MDLabel(text = f"{reply[0]} : {reply[1]}")
+
+                message = MDLabel(text=f"{reply[0]} : {reply[1]}")
                 message.adaptive_height = True
-            
+
                 self.root.ids.replies_list.add_widget(message)
                 self.root.ids.replies_list.add_widget(
                     MDBoxLayout(
                         size_hint=(1, None),
                         height="1dp",
-                        md_bg_color = [1, 0, 1, 1]
+                        md_bg_color=[1, 0, 1, 1]
                     )  # Thin horizontal line
                 )
+
+        if (self.control_dict["build_dashboard"]):
+            self.control_dict["build_dashboard"] = False
+
+            if (self.config_dict["is_student"]):
+                self.build_student_dashboard()
+
+            else:
+                self.build_faculty_dashboard()
+
+        if (self.control_dict["attendance_snackbar"]):
+            self.control_dict["attendance_snackbar"] = False
+            Snackbar(
+                text=self.control_dict["attendance_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+
+        if (self.control_dict["show_attendance_message"]):
+            self.control_dict["show_attendance_message"] = False
+            self.student_dashboard_spinner.active = False
+
+            try:
+                self.root.ids.dashboard.remove_widget(self.attendance_message)
+            except:
+                pass
+            try:
+                self.root.ids.dashboard.remove_widget(
+                    self.student_dashboard_spinner)
+            except:
+                pass
+
+            self.attendance_message = MDLabel(
+                text=self.control_dict["attendance_message"],
+                halign="center"
+            )
+            self.root.ids.dashboard.add_widget(self.attendance_message)
+
+        if (self.control_dict["show_attendance"]):
+            self.control_dict["show_attendance"] = False
+            self.student_dashboard_spinner.active = False
+
+            try:
+                self.root.ids.dashboard.remove_widget(self.attendance_message)
+            except:
+                pass
+            try:
+                self.root.ids.dashboard.remove_widget(
+                    self.student_dashboard_spinner)
+            except:
+                pass
+            try:
+                child_list = []
+                for child in self.root.ids.attendance_list.children:
+                    child_list.append(child)
+                for child in child_list:
+                    self.root.ids.attendance_list.remove_widget(child)
+            except:
+                pass
+
+            for attendance in self.control_dict["attendance"]:
+
+                attendance_percentage = attendance[3]/attendance[4] * 100
+                if (attendance_percentage >= 75):
+                    card_color = "#A5D6A7"
+                else:
+                    card_color = "#EF9A9A"
+
+                md_relative_layout = MDRelativeLayout()
+
+                md_relative_layout.add_widget(
+                    MDLabel(
+                        text=f"Course Name : {attendance[0]}",
+                        color="grey",
+                        pos=("10dp", "45dp"),
+                        bold=True
+                    )
+                )
+
+                md_relative_layout.add_widget(
+                    MDLabel(
+                        text=f"Course Code : {attendance[1]}",
+                        color="grey",
+                        pos=("10dp", "15dp"),
+                        bold=True
+                    )
+                )
+
+                md_relative_layout.add_widget(
+                    MDLabel(
+                        text=f"Batch : {attendance[2]}",
+                        color="grey",
+                        pos=("10dp", "-15dp"),
+                        bold=True
+                    )
+                )
+
+                md_relative_layout.add_widget(
+                    MDLabel(
+                        text=f"Attendance : {attendance_percentage}%",
+                        color="grey",
+                        pos=("12dp", "-45dp"),
+                        bold=True
+                    )
+                )
+
+                self.root.ids.attendance_list.add_widget(
+                    MDCard(
+                        md_relative_layout,
+                        md_bg_color=card_color,
+                        size_hint=(1, None),
+                        height="150dp",
+                        pos_hint={"center_x": .5, "center_y": .5}
+                    )
+                )
+
+        if(self.control_dict["courses_snackbar"]):
+
+            self.control_dict["courses_snackbar"] = False
+            Snackbar(
+                text=self.control_dict["courses_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+
+        if(self.control_dict["show_courses_message"]):
+
+            self.control_dict["show_courses_message"] = False
+            self.courses_spinner.active = False
+
+            try:
+                self.root.ids.mark_attendance_pre_screen.remove_widget(self.courses_message)
+            except:
+                pass
+            try:
+                self.root.ids.mark_attendance_pre_screen.remove_widget(self.courses_spinner)
+            except:
+                pass
+
+            self.courses_message = MDLabel(
+                text=self.control_dict["courses_message"],
+                halign="center"
+            )
+            self.root.ids.mark_attendance_pre_screen.add_widget(self.courses_message)
+
+        if(self.control_dict["show_courses"]):
+
+            self.control_dict["show_courses"] = False
+            self.courses_spinner.active = False
+
+            try:
+                self.root.ids.mark_attendance_pre_screen.remove_widget(self.courses_message)
+            except:
+                pass
+            try:
+                self.root.ids.mark_attendance_pre_screen.remove_widget(self.courses_spinner)
+            except:
+                pass
+            try:
+                child_list = []
+                for child in self.root.ids.courses_list.children:
+                    child_list.append(child)
+                for child in child_list:
+                    self.root.ids.courses_list.remove_widget(child)
+            except:
+                pass
+
+            for course in self.control_dict["courses"]:
+
+                md_relative_layout = MDRelativeLayout()
+
+                md_relative_layout.add_widget(
+                        MDIconButton(
+                            id = f"{course[0]}${course[1]}${course[2]}",
+                            icon="dots-vertical",
+                            pos_hint={"top": 1, "right": 1},
+                            on_release = lambda x: self.course_options_callback(x.id),
+                        )
+                    )
+
+                md_relative_layout.add_widget(
+                    MDLabel(
+                        text=f"Course Name : {course[0]}",
+                        color="grey",
+                        pos=("10dp", "30dp"),
+                        bold=True
+                    )
+                )
+                md_relative_layout.add_widget(
+                    MDLabel(
+                        text=f"Course Code : {course[1]}",
+                        color="grey",
+                        pos=("10dp", "0dp"),
+                        size_hint=(0.9, 1)
+                    )
+                )
+                
+                md_relative_layout.add_widget(
+                    MDLabel(
+                        text=f"Batch : {course[2]}",
+                        color="grey",
+                        pos=("10dp", "-30dp"),
+                        size_hint=(0.9, 1)
+                    )
+                )
+
+                self.root.ids.courses_list.add_widget(
+                    MDCard(
+                        md_relative_layout,
+                        id = f"{course[0]}${course[1]}${course[2]}",
+                        md_bg_color=[123/255, 2/255, 144/255, 100/255],
+                        size_hint=(1, None),
+                        height="150dp",
+                        pos_hint={"center_x": .5, "center_y": .5},
+                        on_release=lambda x: self.redirect_to_mark_attendance_screen(x.id)
+                    )
+                )
+        if(self.control_dict["add_course_snackbar"]):
+
+            self.control_dict["add_course_snackbar"] = False
+            Snackbar(
+                text=self.control_dict["add_course_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
 
     def select_path(self, path):
         '''
@@ -1508,7 +1789,7 @@ class App(MDApp):
         }
 
         try:
-            response = requests.post(url, data=data)
+            response = requests.post(url, json=data)
         except:
             self.root.ids.sign_in_spinner.active = False
             self.control_dict["sign_in_snackbar_message"] = "Failed to connect to server."
@@ -1522,6 +1803,8 @@ class App(MDApp):
             self.config_dict["username"] = response.json()["username"]
             self.config_dict["is_student"] = response.json()["is_student"]
             self.config_dict["session_id"] = response.json()["session_id"]
+
+            self.control_dict["build_dashboard"] = True
         else:
             self.control_dict["sign_in_snackbar_message"] = response.json()[
                 "message"]
@@ -1559,7 +1842,7 @@ class App(MDApp):
         data = {"email": self.root.ids.sign_up_email.text}
 
         try:
-            response = requests.post(url, data=data)
+            response = requests.post(url, json=data)
         except:
             self.root.ids.register_otp_sending_spinner.active = False
             self.control_dict["sign_up_otp_sent_snackbar_message"] = "Failed to connect to server."
@@ -1594,7 +1877,7 @@ class App(MDApp):
                 }
 
         try:
-            response = requests.post(url, data=data)
+            response = requests.post(url, json=data)
         except:
             self.root.ids.reset_password_otp_sending_spinner.active = False
             self.control_dict["reset_password_otp_sent_snackbar_message"] = "Failed to connect to server."
@@ -1643,7 +1926,7 @@ class App(MDApp):
         }
 
         try:
-            response = requests.post(url, data=data)
+            response = requests.post(url, json=data)
         except:
             self.root.ids.sign_up_spinner.active = False
             self.control_dict["sign_up_snackbar_message"] = "Failed to connect to server."
@@ -1739,7 +2022,7 @@ class App(MDApp):
         print(data)
 
         try:
-            response = requests.post(url, data=data)
+            response = requests.post(url, json=data)
         except:
             self.root.ids.reset_password_spinner.active = False
             self.control_dict["reset_password_snackbar_message"] = "Failed to connect to server."
@@ -1978,6 +2261,26 @@ class App(MDApp):
         self.control_dict["show_replies_message"] = False
         self.control_dict["show_replies"] = False
 
+        self.control_dict["build_dashboard"] = False
+        self.control_dict["attendance"] = None
+        self.control_dict["attendance_snackbar_message"] = None
+        self.control_dict["attendance_snackbar"] = False
+
+        self.control_dict["attendance_message"] = None
+        self.control_dict["show_attendance_message"] = False
+        self.control_dict["show_attendance"] = False
+
+        self.control_dict["courses"] = None
+        self.control_dict["courses_snackbar_message"] = None
+        self.control_dict["courses_snackbar"] = False
+
+        self.control_dict["courses_message"] = None
+        self.control_dict["show_courses_message"] = False
+        self.control_dict["show_courses"] = False
+
+        self.control_dict["add_course_snackbar_message"] = None
+        self.control_dict["add_course_snackbar"] = False
+
     def reset_screens(self):
 
         try:
@@ -1998,7 +2301,7 @@ class App(MDApp):
             "session_id": self.config_dict["session_id"]
         }
 
-        response = requests.post(url, data=data)
+        response = requests.post(url, json=data)
 
         self.control_dict["logout_snackbar_message"] = response.json()[
             "message"]
@@ -2013,7 +2316,7 @@ class App(MDApp):
         self.root.current = "sign_in"
 
         self.root.ids.nav_drawer.set_state("close")
-        self.root.ids.bottom_nav.switch_tab("dashboard")
+        # self.root.ids.bottom_nav.switch_tab("dashboard")
         try:
             self.root.ids.docs.remove_widget(self.docs_message)
         except:
@@ -2029,6 +2332,21 @@ class App(MDApp):
         except:
             pass
 
+        try:
+            self.root.ids.dashboard.remove_widget(self.faculty_dashboard_box_layout)
+        except:
+            pass
+
+        
+        try:
+            child_list = []
+            for child in self.root.ids.attendance_list.children:
+                child_list.append(child)
+            for child in child_list:
+                self.root.ids.attendance_list.remove_widget(child)
+        except:
+            pass
+
     def docs_press_thread(self):
 
         url = self.domain + "api/list_files/"
@@ -2038,7 +2356,7 @@ class App(MDApp):
         }
 
         try:
-            response = requests.post(url, data=data)
+            response = requests.post(url, json=data)
         except:
             self.docs_spinner.active = False
             self.control_dict["docs_snackbar_message"] = "Failed to connect to server."
@@ -2070,9 +2388,6 @@ class App(MDApp):
             self.root.ids.docs.add_widget(self.docs_spinner)
 
         threading.Thread(target=self.docs_press_thread).start()
-
-    def docs_leave(self):
-        pass
 
     def upload_file_dialog_callback(self):
         self.file_manager.show(os.path.expanduser("~"))
@@ -2134,7 +2449,7 @@ class App(MDApp):
                 "session_id": self.config_dict["session_id"]}
 
         try:
-            response = requests.post(url, data=data)  # Stream the file
+            response = requests.post(url, json=data)  # Stream the file
         except:
             self.file_actions_dialog.dismiss()
             self.control_dict["file_download_snackbar_message"] = "Failed to connect to server."
@@ -2174,7 +2489,7 @@ class App(MDApp):
         }
 
         try:
-            response = requests.post(url, data=data)
+            response = requests.post(url, json=data)
         except:
             self.upload_file_dialog.dismiss()
             self.control_dict["file_delete_snackbar_message"] = "Failed to connect to server."
@@ -2202,7 +2517,7 @@ class App(MDApp):
         }
 
         try:
-            response = requests.post(url, data=data)
+            response = requests.post(url, json=data)
         except:
             self.forums_spinner.active = False
             self.control_dict["forums_snackbar_message"] = "Failed to connect to server."
@@ -2246,7 +2561,7 @@ class App(MDApp):
         }
 
         try:
-            response = requests.post(url, data=data)
+            response = requests.post(url, json=data)
         except:
             self.create_thread_dialog.dismiss()
             self.control_dict["create_thread_snackbar_message"] = "Failed to connect to server."
@@ -2308,8 +2623,7 @@ class App(MDApp):
         )
         self.create_thread_dialog.open()
 
-    def forums_leave(self):
-        pass
+    
 
     def delete_thread_thread(self):
         url = self.domain + "/api/delete_thread/"
@@ -2321,7 +2635,7 @@ class App(MDApp):
         }
 
         try:
-            response = requests.post(url, data=data)
+            response = requests.post(url, json=data)
         except:
             self.create_thread_dialog.dismiss()
             self.control_dict["delete_thread_snackbar_message"] = "Failed to connect to server."
@@ -2384,17 +2698,17 @@ class App(MDApp):
         self.root.current = "home"
         self.control_dict["replies"] = []
 
-        try:
-            child_list = []
-            for child in self.root.ids.replies_list.children:
-                child_list.append(child)
-            for child in child_list:
-                self.root.ids.replies_list.remove_widget(child)
-        except:
-            pass
+        # try:
+        #     child_list = []
+        #     for child in self.root.ids.replies_list.children:
+        #         child_list.append(child)
+        #     for child in child_list:
+        #         self.root.ids.replies_list.remove_widget(child)
+        # except:
+        #     pass
 
     def expand_thread(self, thread_name):
-        
+
         self.control_dict["current_thread"] = thread_name
         self.root.ids.thread_discussions_screen_top_app_bar.title = thread_name
         self.root.transition = MDSlideTransition()
@@ -2414,7 +2728,7 @@ class App(MDApp):
         }
 
         try:
-            response = requests.post(url, data=data)
+            response = requests.post(url, json=data)
         except:
             self.root.ids.post_reply_spinner.active = False
             self.control_dict["post_reply_snackbar_message"] = "Failed to connect to server."
@@ -2448,7 +2762,7 @@ class App(MDApp):
         }
 
         try:
-            response = requests.post(url, data=data)
+            response = requests.post(url, json=data)
         except:
             self.replies_spinner.active = False
             self.control_dict["replies_snackbar_message"] = "Failed to connect to server."
@@ -2480,6 +2794,265 @@ class App(MDApp):
 
         threading.Thread(target=self.show_replies_thread).start()
 
+    def dashboard_press(self):
+        
+        if(self.config_dict["is_student"]):
+            self.build_student_dashboard()
+        
+
+    def build_student_dashboard_thread(self):
+
+        url = self.domain + "/api/list_attendance/"
+        data = {
+            "username": self.config_dict["username"],
+            "session_id": self.config_dict["session_id"]
+        }
+
+        try:
+            response = requests.post(url, json=data)
+        except:
+            self.student_dashboard_spinner.active = False
+            self.control_dict["attendance_snackbar_message"] = "Failed to connect to server."
+            self.control_dict["attendance_snackbar"] = True
+            return
+
+        attendance = response.json()["attendance"]
+        if (attendance != self.control_dict["attendance"]):
+            self.control_dict["attendance"] = attendance
+            if (len(attendance) == 0):
+                self.control_dict["attendance_message"] = "No attendance found."
+                self.control_dict["show_attendance_message"] = True
+            else:
+                self.control_dict["show_attendance"] = True
+
+    def build_student_dashboard(self):
+        self.root.ids.home_screen_top_app_bar.title = "Student Dashboard"
+
+        if (self.control_dict["attendance"] == None):
+            self.student_dashboard_spinner = MDSpinner(
+                color=self.theme_color,
+                size_hint=(None, None),
+                size=(dp(32), dp(32)),
+                line_width=2,
+                active=True,
+                pos_hint={'center_x': .5, 'center_y': .5}
+            )
+            self.root.ids.dashboard.add_widget(self.student_dashboard_spinner)
+
+        threading.Thread(target=self.build_student_dashboard_thread).start()
+
+    def build_faculty_dashboard(self):
+        self.root.ids.home_screen_top_app_bar.title = "Faculty Dashboard"
+
+        self.faculty_dashboard_box_layout = MDBoxLayout(
+            orientation="vertical",
+            spacing="10dp",
+            padding="10dp"
+        )
+
+        md_relative_layout = MDRelativeLayout()
+
+        md_relative_layout.add_widget(
+            MDIconButton(
+                icon="account-check",
+                pos_hint = {"center_x": .3, "center_y": .5},
+                icon_size = "35sp",
+                on_release=lambda x: self.redirect_to_mark_attendance_pre_screen()
+            )
+        )
+        
+        md_relative_layout.add_widget(
+            MDLabel(
+                text="Mark Attendance",
+                color="grey",
+                pos=("130dp", "0dp"),
+                bold=True,
+                font_style="H6"
+            )
+        )
+
+        self.faculty_dashboard_box_layout.add_widget(
+            MDCard(
+                md_relative_layout,
+                md_bg_color=[123/255, 2/255, 144/255, 100/255],
+                size_hint=(1, None),
+                height="150dp",
+                pos_hint={"center_x": .5, "center_y": .5},
+                on_release = lambda x : self.redirect_to_mark_attendance_pre_screen()
+            )
+        )
+
+        self.faculty_dashboard_box_layout.add_widget(MDWidget())
+        self.root.ids.dashboard.add_widget(self.faculty_dashboard_box_layout)
+
+    def redirect_to_mark_attendance_pre_screen(self):
+        self.root.transition = MDSlideTransition()
+        self.root.transition.direction = "left"
+        self.root.current = "mark_attendance_pre_screen"
+        self.show_courses()
+
+    def redirect_to_dashboard(self):
+        self.root.transition = MDSlideTransition()
+        self.root.transition.direction = "right"
+        self.root.current = "home"
+
+    def show_courses_thread(self):
+        
+        url = self.domain + "/api/list_courses/"
+        data = {
+            "username": self.config_dict["username"],
+            "session_id": self.config_dict["session_id"]
+        }
+
+        try:
+            response = requests.post(url, json=data)
+        except:
+            self.courses_spinner.active = False
+            self.control_dict["courses_snackbar_message"] = "Failed to connect to server."
+            self.control_dict["courses_snackbar"] = True
+            return
+
+        courses = response.json()["courses"]
+        if (courses != self.control_dict["courses"]):
+            self.control_dict["courses"] = courses
+            if (len(courses) == 0):
+                self.control_dict["courses_message"] = "No courses found."
+                self.control_dict["show_courses_message"] = True
+            else:
+                self.control_dict["show_courses"] = True
+
+    def show_courses(self):
+        
+        if(self.control_dict["courses"] == None):
+            self.courses_spinner = MDSpinner(
+                color=self.theme_color,
+                size_hint=(None, None),
+                size=(dp(32), dp(32)),
+                line_width=2,
+                active=True,
+                pos_hint={'center_x': .5, 'center_y': .5}
+            )
+            self.root.ids.mark_attendance_pre_screen.add_widget(self.courses_spinner)
+
+        threading.Thread(target=self.show_courses_thread).start()
+
+    def add_course_dialog_callback(self):
+
+        add_course_box_layout = MDBoxLayout(
+            orientation="vertical",
+            spacing="10dp",
+            padding="10dp",
+            size_hint_y = None,
+            height = "200dp"
+        )
+
+        course_name_label = MDTextField(
+                id = "course_name",
+                hint_text="Course Name",
+                line_color_focus=self.theme_color,
+                hint_text_color_focus=self.theme_color,
+                text_color_focus="black",
+                mode="rectangle"
+            )
+        add_course_box_layout.add_widget(course_name_label)
+        
+        course_code_label = MDTextField(
+                hint_text="Course Code",
+                line_color_focus=self.theme_color,
+                hint_text_color_focus=self.theme_color,
+                text_color_focus="black",
+                mode="rectangle"
+            )
+        add_course_box_layout.add_widget(course_code_label)
+
+        batch_label = MDTextField(
+                id = "batch",
+                hint_text="Batch",
+                line_color_focus=self.theme_color,
+                hint_text_color_focus=self.theme_color,
+                text_color_focus="black",
+                mode="rectangle"
+            )
+        add_course_box_layout.add_widget(batch_label)
+
+        self.add_course_spinner = MDSpinner(
+            color=[1, 1, 1, 1],
+            size_hint=(None, None),
+            size=(dp(16), dp(16)),
+            line_width=1.5,
+            active=False
+        )
+
+        self.add_course_button = MDFlatButton(
+            self.add_course_spinner,
+            text="ADD",
+            on_release = lambda button: self.add_course(course_name_label.text, course_code_label.text, batch_label.text)
+        )
+
+        self.add_course_dialog = MDDialog(
+            title="Add Course",
+            # size_hint=(0.9, 0.5),
+            type = "custom",
+            content_cls = add_course_box_layout,
+            buttons=[
+                MDFlatButton(
+                    text="CANCEL",
+                    on_release=lambda button: self.add_course_dialog.dismiss()
+                ),
+                self.add_course_button
+            ],
+            auto_dismiss=False
+        )
+        self.add_course_dialog.open()
+
+
+    def redirect_to_mark_attendance_screen(self, course):
+        pass
+        # self.root.transition = MDSlideTransition()
+        # self.root.transition.direction = "left"
+        # self.root.current = "mark_attendance"
+    
+    def add_course_thread(self, course_name, course_code, batch):
+        
+        url = self.domain + "/api/add_course/"
+
+        data = {
+            "username": self.config_dict["username"],
+            "course_code": course_name,
+            "course_name": course_code,
+            "batch": batch,
+            "session_id": self.config_dict["session_id"]
+        }
+
+        try:
+            response = requests.post(url, json=data)
+        except:
+            self.add_course_dialog.dismiss()
+            self.add_course_spinner.active = False
+            self.add_course_button.disabled = False
+            self.control_dict["add_course_snackbar_message"] = "Failed to connect to server."
+            self.control_dict["add_course_snackbar"] = True
+            return
+        
+        self.add_course_dialog.dismiss()
+        self.add_course_spinner.active = False
+        self.add_course_spinner.color = [1, 1, 1, 1]
+        self.add_course_button.disabled = False
+        self.control_dict["add_course_snackbar_message"] = response.json()["message"]
+        self.control_dict["add_course_snackbar"] = True
+        self.show_courses()
+
+    def add_course(self, course_name, course_code, batch):
+        self.add_course_button.disabled_color = [245/255, 245/255, 245/255, 1]
+        self.add_course_spinner.color = self.theme_color
+        self.add_course_button.disabled = True
+        self.add_course_spinner.active = True
+
+        threading.Thread(target=self.add_course_thread, args=(course_name, course_code, batch)).start()
+
+    def course_options_callback(self, course):
+        pass
+        
     def temp(self):
         if (DEBUG):
 
@@ -2488,7 +3061,6 @@ class App(MDApp):
             print()
             for key, value in self.control_dict.items():
                 print(f"{key}: {value}")
-        
 
     def on_start(self):
         if (DEBUG):

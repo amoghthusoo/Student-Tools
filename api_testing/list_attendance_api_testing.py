@@ -3,8 +3,8 @@ import requests
 url = "http://localhost:8000/api/list_attendance/"
 
 data = {
-    "username" : "umang",
-    "session_id" : "fbd40f29-a4af-4c57-bcca-c31fc6584830"
+    "username" : "amogh",
+    "session_id" : "26dbac44-f0a4-412e-b541-84ae893f3d17"
 }
 
 response = requests.post(url, data=data)

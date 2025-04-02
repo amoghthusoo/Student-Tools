@@ -3,9 +3,10 @@ from .hash_password import PasswordHasher
 
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 load_dotenv()
 
-HOSTED_DB = True
+HOSTED_DB = False
 
 class Database:
 
@@ -33,14 +34,14 @@ class Database:
         self.crs.execute("""
         create table if not exists registration_otp(
                         email varchar(256) primary key,
-                        otp int
+                        otp varchar(64)
                         );
         """)
 
         self.crs.execute("""
         create table if not exists reset_password_otp(
                         email varchar(256) primary key,
-                        otp int
+                        otp varchar(64)
                         );
         """)
 
@@ -51,6 +52,12 @@ class Database:
                         email varchar(256),
                         is_student boolean,
                         session_id varchar(36)
+                        );
+        """)
+
+        self.crs.execute("""
+        create table if not exists used_otps(
+                        otp varchar(64) primary key
                         );
         """)
 
@@ -96,6 +103,19 @@ class Database:
                         student_username varchar(256),
                         attendance int,
                         total_classes int
+                        );
+        """)
+
+        self.crs.execute("""
+        create table if not exists logs(
+                        log_id int auto_increment primary key,
+                        date date,
+                        time time,
+                        username varchar(256),
+                        api_endpoint varchar(256),
+                        status_code int,
+                        ip_address varchar(32),
+                        description varchar(1024) default null
                         );
         """)
 
@@ -151,7 +171,7 @@ class Database:
 
         result = self.crs.fetchone()
 
-        if(result and result[0] == otp):
+        if(result and PasswordHasher.check_password_bcrypt(otp, result[0])):
             return True
         else:
             return False
@@ -224,7 +244,7 @@ class Database:
 
         result = self.crs.fetchone()
 
-        if(result and result[0] == otp):
+        if(result and PasswordHasher.check_password_bcrypt(otp, result[0])):
             return True
         else:
             return False
@@ -384,7 +404,7 @@ class Database:
     def list_courses(self, username):
         
         self.crs.execute("""
-        select course_code, course_name, batch from courses where faculty_username = %s;
+        select course_name, course_code, batch from courses where faculty_username = %s;
         """, (username,))
 
         result = self.crs.fetchall()
@@ -444,12 +464,58 @@ class Database:
     def list_attendance(self, username):
             
             self.crs.execute("""
-            select course_name, course_code, batch, attendance, total_classes from attendance natural join courses where student_username = %s;
+            select c.course_name, a.course_code, a.batch, a.attendance, a.total_classes
+                            from attendance a inner join courses c 
+                            on a.course_code = c.course_code 
+                            where student_username = %s;
             """, (username,))
     
             result = self.crs.fetchall()
-    
             return result
+    
+    def free_otps_if_required(self, lower_bound, upper_bound):
+        
+        self.crs.execute("""
+        select count(*) from used_otps;
+        """)
+
+        result = self.crs.fetchone()
+
+        total_otps = upper_bound - lower_bound + 1
+        used_otps = result[0]
+
+        if(used_otps/total_otps > 0.75):
+            print("reaching here...")
+            self.crs.execute("""
+            delete from used_otps;
+            """)
+
+    def registration_otp_exists(self, otp):
+            
+            self.crs.execute("""
+            select * from used_otps;
+            """,)
+
+            for result in self.crs.fetchall():
+                if(PasswordHasher.check_password_bcrypt(otp, result[0])):
+                    return True
+
+            return False
+    
+    def remember_otp(self, opt):
+        self.crs.execute("""
+        insert into used_otps values (%s);
+        """, (PasswordHasher.hash_password_bcrypt(opt),))
+
+    def save_log(self, username, api_endpoint, status_code, ip_address, description):
+
+        current_datetime = datetime.now()
+        current_date = current_datetime.date()
+        current_time = current_datetime.time()
+
+        self.crs.execute("""
+        insert into logs(date, time, username, api_endpoint, status_code, ip_address, description) values (%s, %s, %s, %s, %s, %s, %s)
+        """, (current_date, current_time, username, api_endpoint, status_code, ip_address, description))
 
     def close(self):
         self.hdl.close()
