@@ -20,6 +20,7 @@ from kivymd.uix.card import MDCard
 from kivymd.uix.relativelayout import MDRelativeLayout
 from kivymd.uix.textfield import MDTextField
 from kivymd.uix.widget import MDWidget
+from kivymd.uix.datatables import MDDataTable
 
 import os
 import requests
@@ -811,6 +812,103 @@ MDScreenManager:
                     id : courses_list
                     spacing : "10dp"
                     padding : "10dp"
+    
+    MDScreen:
+        id : mark_attendance_screen
+        name : "mark_attendance_screen"
+
+        MDBoxLayout:
+
+            orientation : "vertical"
+            spacing : "0dp"
+            # md_bg_color : [1, 0, 0, 1]
+            
+
+            MDTopAppBar:
+
+                title : "Mark Attendance"
+                left_action_items : [["arrow-left", lambda x : app.redirect_to_mark_attendance_pre_screen_backward()]]
+                right_action_items : [["dots-vertical", lambda x: app.temp()], ["plus", lambda x: app.add_student_dialog_callback()], ["check", lambda x: app.mark_attendance_dialog_callback()]]
+                md_bg_color : app.theme_color
+                elevation : 0
+
+            MDBoxLayout:
+                id : student_list
+                orientation : "vertical"
+                spacing : "0dp"
+                padding : "0dp"
+                # md_bg_color : [1, 0, 0, 1]
+
+            MDBoxLayout:
+                orientation : "horizontal"
+                spacing : "10dp"
+                padding : "10dp"
+                # md_bg_color : [0, 1, 0, 1]
+                size_hint : (1, 0.1)
+
+                MDRaisedButton:
+                    id : automatic_attendance_button
+                    text : "Automatic"
+                    font_size : "18sp"
+                    pos_hint : {'center_x' : 0.5, 'center_y' : 0.5}
+                    on_release : app.automatic_attendance()
+                    size_hint : (0.5, 1)
+                    md_bg_color : app.theme_color
+
+                    md_bg_color_disabled : app.theme_color
+                    disabled_color : [1, 1, 1, 0]
+
+                    elevation : 0
+                    shadow_softness : 80
+                    shadow_softness_size : 2
+
+                    MDSpinner:
+                        id : automatic_attendance_spinner
+                        color : [1, 1, 1, 1]
+                        size_hint: None, None
+                        size: dp(16), dp(16)
+                        line_width : 1.5
+                        active: False
+
+                    MDRelativeLayout:
+
+                        MDIcon:
+                            icon : "bluetooth"
+                            pos_hint : {"center_x" : 0.1, "center_y" : 0.5}
+                            color : [1, 1, 1, 1]
+                            disabled_color : app.theme_color
+
+                MDRaisedButton:
+                    id : bluetooth_scan_button
+                    text : "Scan"
+                    font_size : "18sp"
+                    pos_hint : {'center_x' : 0.5, 'center_y' : 0.5}
+                    md_bg_color : app.theme_color
+                    size_hint : (0.5, 1)
+                    on_release : app.bluetooth_scan()
+
+                    md_bg_color_disabled : app.theme_color
+                    disabled_color : [1, 1, 1, 0]
+
+                    elevation : 0
+                    shadow_softness : 80
+                    shadow_softness_size : 2
+
+                    MDSpinner:
+                        id : bluetooth_scan_spinner
+                        color : [1, 1, 1, 1]
+                        size_hint: None, None
+                        size: dp(16), dp(16)
+                        line_width : 1.5
+                        active: False
+
+                    MDRelativeLayout:
+
+                        MDIcon:
+                            icon : "bluetooth"
+                            pos_hint : {"center_x" : 0.1, "center_y" : 0.5}
+                            color : [1, 1, 1, 1]
+                            disabled_color : app.theme_color
 
 """
 
@@ -902,6 +1000,33 @@ class App(MDApp):
 
             "add_course_snackbar_message" : None,
             "add_course_snackbar" : False,
+
+            "students" : None,
+            "show_students_snackbar_message" : None,
+            "show_students_snackbar" : False,
+            "show_students_message" : None,
+            "show_students_msg" : False,
+            "show_students" : False,
+
+            "current_course" : None,
+            "current_batch" : None,
+
+            "attendance_success_snackbar_message" : None,
+            "attendance_success_snackbar" : False,
+
+            "bluetooth_scan_snackbar_message" : None,
+            "bluetooth_scan_snackbar" : False,
+            "scanned_students" : None,
+            "show_scanned_students" : False,
+
+            "bluetooth_scan_message" : None,
+            "show_bluetooth_scan_message" : False,
+            "reset_bluetooth_scan_button" : False,
+
+            "automatic_attendance_snackbar_message" : None,
+            "automatic_attendance_snackbar" : False,
+            "reset_automatic_attendance_button" : False,
+            
         }
 
         Clock.schedule_interval(self.control_method, 1/10)
@@ -1490,19 +1615,24 @@ class App(MDApp):
                 pass
 
             for attendance in self.control_dict["attendance"]:
-
-                attendance_percentage = attendance[3]/attendance[4] * 100
+                
+                try:
+                    attendance_percentage = attendance[3]/attendance[4] * 100
+                except:
+                    attendance_percentage = 0
+                
                 if (attendance_percentage >= 75):
-                    card_color = "#A5D6A7"
+                    card_color = "#019913"
                 else:
-                    card_color = "#EF9A9A"
+                    card_color = "#ff0900"
 
                 md_relative_layout = MDRelativeLayout()
 
                 md_relative_layout.add_widget(
                     MDLabel(
                         text=f"Course Name : {attendance[0]}",
-                        color="grey",
+                        theme_text_color = "Custom",
+                        text_color=[1, 1, 1, 1],
                         pos=("10dp", "45dp"),
                         bold=True
                     )
@@ -1511,7 +1641,8 @@ class App(MDApp):
                 md_relative_layout.add_widget(
                     MDLabel(
                         text=f"Course Code : {attendance[1]}",
-                        color="grey",
+                        theme_text_color = "Custom",
+                        text_color=[1, 1, 1, 1],
                         pos=("10dp", "15dp"),
                         bold=True
                     )
@@ -1520,7 +1651,8 @@ class App(MDApp):
                 md_relative_layout.add_widget(
                     MDLabel(
                         text=f"Batch : {attendance[2]}",
-                        color="grey",
+                        theme_text_color = "Custom",
+                        text_color=[1, 1, 1, 1],
                         pos=("10dp", "-15dp"),
                         bold=True
                     )
@@ -1529,7 +1661,8 @@ class App(MDApp):
                 md_relative_layout.add_widget(
                     MDLabel(
                         text=f"Attendance : {attendance_percentage}%",
-                        color="grey",
+                        theme_text_color = "Custom",
+                        text_color=[1, 1, 1, 1],
                         pos=("12dp", "-45dp"),
                         bold=True
                     )
@@ -1640,7 +1773,7 @@ class App(MDApp):
                 self.root.ids.courses_list.add_widget(
                     MDCard(
                         md_relative_layout,
-                        id = f"{course[0]}${course[1]}${course[2]}",
+                        id = f"{course[1]}${course[2]}",
                         md_bg_color=[123/255, 2/255, 144/255, 100/255],
                         size_hint=(1, None),
                         height="150dp",
@@ -1648,6 +1781,7 @@ class App(MDApp):
                         on_release=lambda x: self.redirect_to_mark_attendance_screen(x.id)
                     )
                 )
+
         if(self.control_dict["add_course_snackbar"]):
 
             self.control_dict["add_course_snackbar"] = False
@@ -1658,6 +1792,181 @@ class App(MDApp):
                 size_hint_x=0.95,
                 duration=1.5
             ).open()
+
+        if(self.control_dict["show_students_snackbar"]):
+
+            self.control_dict["show_students_snackbar"] = False
+            Snackbar(
+                text=self.control_dict["show_students_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+
+        if(self.control_dict["show_students_msg"]):
+
+            self.control_dict["show_students_msg"] = False
+            self.show_students_spinner.active = False
+
+            try:
+                self.root.ids.mark_attendance_screen.remove_widget(self.show_students_msg)
+            except:
+                pass
+            try:
+                self.root.ids.mark_attendance_screen.remove_widget(self.show_students_spinner)
+            except:
+                pass
+
+            self.students_message = MDLabel(
+                text=self.control_dict["show_students_message"],
+                halign="center"
+            )
+            self.root.ids.mark_attendance_screen.add_widget(self.students_message)
+
+        if(self.control_dict["show_students"]):
+            self.control_dict["show_students"] = False
+            self.show_students_spinner.active = False
+
+            try:
+                self.root.ids.mark_attendance_screen.remove_widget(self.show_students_msg)
+            except:
+                pass
+            try:
+                self.root.ids.mark_attendance_screen.remove_widget(self.show_students_spinner)
+            except:
+                pass
+            try:
+                self.root.ids.student_list.remove_widget(self.student_table)
+            except:
+                pass
+            
+            row_data = []
+            for index, student in  enumerate(self.control_dict["students"]):
+                row_data.append((f"{index + 1}", f"{student[0]}", f"{student[1]}"))
+
+            self.student_table = MDDataTable(
+            use_pagination=False,
+            check=True,
+            column_data=[
+                ("S.No.", dp(30)),
+                ("Name", dp(30)),
+                ("MAC", dp(60)),
+            ],
+            row_data = row_data,
+            elevation=2,
+            )
+
+            self.root.ids.student_list.add_widget(self.student_table)
+
+        if(self.control_dict["attendance_success_snackbar"]):
+            self.control_dict["attendance_success_snackbar"] = False
+            Snackbar(
+                text=self.control_dict["attendance_success_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+            self.redirect_to_mark_attendance_pre_screen_backward()
+        
+        if(self.control_dict["bluetooth_scan_snackbar"]):
+            self.control_dict["bluetooth_scan_snackbar"] = False
+            self.bluetooth_scan_button.disabled = False
+            self.root.ids.bluetooth_scan_spinner.active = False
+            
+            Snackbar(
+                text=self.control_dict["bluetooth_scan_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+
+        if(self.control_dict["show_scanned_students"]):
+            self.control_dict["show_scanned_students"] = False
+            self.root.ids.bluetooth_scan_button.disabled = False
+            self.root.ids.bluetooth_scan_spinner.active = False
+
+            try:
+                self.root.ids.mark_attendance_screen.remove_widget(self.show_students_msg)
+            except:
+                pass
+            try:
+                self.root.ids.mark_attendance_screen.remove_widget(self.show_students_spinner)
+            except:
+                pass
+            try:
+                self.root.ids.student_list.remove_widget(self.student_table)
+            except:
+                pass
+
+            row_data = []
+            for index, student in  enumerate(self.control_dict["scanned_students"]):
+                row_data.append((f"{index + 1}", f"{student[0]}", f"{student[1]}"))
+
+            self.student_table = MDDataTable(
+            use_pagination=False,
+            check=True,
+            column_data=[
+                ("S.No.", dp(30)),
+                ("Name", dp(30)),
+                ("MAC", dp(60)),
+            ],
+            row_data = row_data,
+            elevation=2,
+            )
+
+            self.root.ids.student_list.add_widget(self.student_table)   
+
+        if(self.control_dict["show_bluetooth_scan_message"]):
+            self.control_dict["show_bluetooth_scan_message"] = False
+            self.root.ids.bluetooth_scan_button.disabled = False
+            self.root.ids.bluetooth_scan_spinner.active = False
+
+            try:
+                self.root.ids.mark_attendance_screen.remove_widget(self.show_students_msg)
+            except:
+                pass
+            try:
+                self.root.ids.mark_attendance_screen.remove_widget(self.show_students_spinner)
+            except:
+                pass
+            try:
+                self.root.ids.mark_attendance_screen.remove_widget(self.students_message)
+            except:
+                pass
+            try:
+                self.root.ids.student_list.remove_widget(self.student_table)
+            except:
+                pass
+
+            self.students_message = MDLabel(
+                text=self.control_dict["bluetooth_scan_message"],
+                halign="center"
+            )
+            self.root.ids.mark_attendance_screen.add_widget(self.students_message)
+
+        if(self.control_dict["reset_bluetooth_scan_button"]):
+            self.control_dict["reset_bluetooth_scan_button"] = False
+            self.root.ids.bluetooth_scan_button.disabled = False
+            self.root.ids.bluetooth_scan_spinner.active = False
+
+        if(self.control_dict["automatic_attendance_snackbar"]):
+            self.control_dict["automatic_attendance_snackbar"] = False
+            Snackbar(
+                text=self.control_dict["automatic_attendance_snackbar_message"],
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+            self.redirect_to_mark_attendance_pre_screen_backward()
+
+        if(self.control_dict["reset_automatic_attendance_button"]):
+            self.control_dict["reset_automatic_attendance_button"] = False
+            self.root.ids.automatic_attendance_button.disabled = False
+            self.root.ids.automatic_attendance_spinner.active = False
 
     def select_path(self, path):
         '''
@@ -1698,6 +2007,7 @@ class App(MDApp):
             auto_dismiss=False
         )
         self.upload_file_dialog.open()
+
 
     def exit_file_manager(self, *args):
         '''Called when the user reaches the root of the directory tree.'''
@@ -2281,6 +2591,33 @@ class App(MDApp):
         self.control_dict["add_course_snackbar_message"] = None
         self.control_dict["add_course_snackbar"] = False
 
+        self.control_dict["students"] = None
+        self.control_dict["show_students_snackbar_message"] = None
+        self.control_dict["show_students_snackbar"] = False
+        self.control_dict["show_students_message"] = None
+        self.control_dict["show_students_msg"] = False
+        self.control_dict["show_students"] = False
+
+        self.control_dict["current_course"] = None
+        self.control_dict["current_batch"] = None
+
+        self.control_dict["attendance_success_snackbar_message"] = None
+        self.control_dict["attendance_success_snackbar"] = False
+
+        self.control_dict["bluetooth_scan_snackbar_message"] = None
+        self.control_dict["bluetooth_scan_snackbar"] = False
+        self.control_dict["scanned_students"] = None
+        self.control_dict["show_scanned_students"] = False
+
+        self.control_dict["bluetooth_scan_message"] = None
+        self.control_dict["show_bluetooth_scan_message"] = False
+        self.control_dict["reset_bluetooth_scan_button"] = False
+
+
+        self.control_dict["automatic_attendance_snackbar_message"] = None,
+        self.control_dict["automatic_attendance_snackbar"] = False,
+        self.control_dict["reset_automatic_attendance_button"] = False,
+    
     def reset_screens(self):
 
         try:
@@ -2857,7 +3194,7 @@ class App(MDApp):
                 icon="account-check",
                 pos_hint = {"center_x": .3, "center_y": .5},
                 icon_size = "35sp",
-                on_release=lambda x: self.redirect_to_mark_attendance_pre_screen()
+                on_release=lambda x: self.redirect_to_mark_attendance_pre_screen_forward()
             )
         )
         
@@ -2878,14 +3215,14 @@ class App(MDApp):
                 size_hint=(1, None),
                 height="150dp",
                 pos_hint={"center_x": .5, "center_y": .5},
-                on_release = lambda x : self.redirect_to_mark_attendance_pre_screen()
+                on_release = lambda x : self.redirect_to_mark_attendance_pre_screen_forward()
             )
         )
 
         self.faculty_dashboard_box_layout.add_widget(MDWidget())
         self.root.ids.dashboard.add_widget(self.faculty_dashboard_box_layout)
 
-    def redirect_to_mark_attendance_pre_screen(self):
+    def redirect_to_mark_attendance_pre_screen_forward(self):
         self.root.transition = MDSlideTransition()
         self.root.transition.direction = "left"
         self.root.current = "mark_attendance_pre_screen"
@@ -3007,10 +3344,10 @@ class App(MDApp):
 
 
     def redirect_to_mark_attendance_screen(self, course):
-        pass
-        # self.root.transition = MDSlideTransition()
-        # self.root.transition.direction = "left"
-        # self.root.current = "mark_attendance"
+        self.root.transition = MDSlideTransition()
+        self.root.transition.direction = "left"
+        self.root.current = "mark_attendance_screen"
+        self.show_students(course)
     
     def add_course_thread(self, course_name, course_code, batch):
         
@@ -3050,9 +3387,290 @@ class App(MDApp):
 
         threading.Thread(target=self.add_course_thread, args=(course_name, course_code, batch)).start()
 
+    def redirect_to_mark_attendance_pre_screen_backward(self):
+        self.root.transition = MDSlideTransition()
+        self.root.transition.direction = "right"
+        self.root.current = "mark_attendance_pre_screen"
+
+        self.control_dict["students"] = None
+        self.control_dict["current_course"] = None
+        self.control_dict["current_batch"] = None
+
+        try:
+            self.root.ids.mark_attendance_screen.remove_widget(self.students_message)
+        except:
+            pass
+        try:
+            self.root.ids.student_list.remove_widget(self.student_table)
+        except:
+            pass
+
+    def show_students_thread(self, course):
+
+        temp = course.split("$")
+        course_code = temp[0]
+        batch = temp[1]
+
+        self.control_dict["current_course"] = course_code
+        self.control_dict["current_batch"] = batch
+
+        url = self.domain + "/api/list_students/"
+        data = {
+            "username": self.config_dict["username"],
+            "course_code": course_code,
+            "batch" : batch,
+            "session_id" : self.config_dict["session_id"]
+        }
+        try:
+            response = requests.post(url, json=data)
+        except:
+            self.show_students_spinner.active = False
+            self.control_dict["show_students_snackbar_message"] = "Failed to connect to server."
+            self.control_dict["show_students_snackbar"] = True
+            return
+        
+        students = response.json()["students"]
+        if (students != self.control_dict["students"]):
+            self.control_dict["students"] = students
+            if (len(students) == 0):
+                self.control_dict["show_students_message"] = "No students found."
+                self.control_dict["show_students_msg"] = True
+            else:
+                self.control_dict["show_students"] = True
+
+    def show_students(self, course):
+
+        if(self.control_dict["students"] == None):
+            self.show_students_spinner = MDSpinner(
+                color=[1, 1, 1, 1],
+                size_hint=(None, None),
+                size=(dp(32), dp(32)),
+                line_width=2,
+                active=False,
+                pos_hint = {"center_x" : 0.5, "center_y" : 0.5}
+            )
+            self.show_students_spinner.color = self.theme_color
+            self.root.ids.mark_attendance_screen.add_widget(self.show_students_spinner)
+            self.show_students_spinner.active = True
+
+        threading.Thread(target = self.show_students_thread, args = (course,)).start()
+
+    def mark_attendance_thread(self):
+
+        present_students_set = set()
+        for student in self.student_table.get_row_checks():
+            present_students_set.add(student[1])
+
+        present_students = {}
+        for student in self.control_dict["students"]:
+            if(student[0] in present_students_set):
+                present_students[student[0]] = True
+
+        url = self.domain + "/api/mark_attendance/"
+        data = {
+            "username": self.config_dict["username"],
+            "course_code": self.control_dict["current_course"],
+            "batch" : self.control_dict["current_batch"],
+            "students": present_students,
+            "session_id": self.config_dict["session_id"]
+        }
+
+        try:
+            response = requests.post(url, json=data)
+        except:
+            self.mark_attendance_dialog.dismiss()
+            self.control_dict["attendance_success_snackbar_message"] = "Failed to connect to server."
+            self.control_dict["attendance_success_snackbar"] = True
+            return
+
+        self.mark_attendance_dialog.dismiss()
+        self.mark_attendance_spinner.active = False
+        self.mark_attendance_spinner.color = [1, 1, 1, 1]
+        self.mark_attendance_button.disabled = False
+        self.control_dict["attendance_success_snackbar_message"] = response.json()["message"]
+        self.control_dict["attendance_success_snackbar"] = True  
+
+    def mark_attendance(self):
+        self.mark_attendance_button.disabled = True
+        self.mark_attendance_button.disabled_color = [245/255, 245/255, 245/255, 1]
+        self.mark_attendance_spinner.color = self.theme_color
+        self.mark_attendance_spinner.active = True
+
+        threading.Thread(target=self.mark_attendance_thread).start()
+
+    def mark_attendance_dialog_callback(self):
+        
+        
+            if(len(self.control_dict["students"]) == 0):
+                self.mark_attendance_dialog = MDDialog(
+                title = "Warning!",
+                text = "No students found.",
+                size_hint = (0.9, 0.2),
+                buttons = [
+                    MDFlatButton(
+                        text = "OK",
+                        on_release = lambda button: self.mark_attendance_dialog.dismiss()
+                    )
+                ],
+                auto_dismiss = False
+                )   
+                self.mark_attendance_dialog.open()
+        
+            else:
+                self.mark_attendance_spinner = MDSpinner(
+                color=[1, 1, 1, 1],
+                size_hint=(None, None),
+                size=(dp(16), dp(16)),
+                line_width=1.5,
+                active=False
+                )
+
+                self.mark_attendance_button = MDFlatButton(
+                self.mark_attendance_spinner,
+                text="MARK",
+                on_release=lambda button: self.mark_attendance()
+                )
+
+                self.mark_attendance_dialog = MDDialog(
+                    title="Mark Attendance",
+                    text="Are you sure you want to mark attendance?",
+                    size_hint=(0.9, 0.2),
+                    buttons=[
+                        MDFlatButton(
+                            text="CANCEL",
+                            on_release=lambda button: self.mark_attendance_dialog.dismiss()
+                        ),
+                        self.mark_attendance_button
+                    ],
+                    auto_dismiss=False
+                )
+                self.mark_attendance_dialog.open()
+
+    def bluetooth_scan_thread(self):
+        
+        try:
+            devices = self.get_nearby_devices()
+        except:
+            self.control_dict["bluetooth_scan_snackbar_message"] = "Failed to connect to bluetooth."
+            self.control_dict["bluetooth_scan_snackbar"] = True
+            return
+
+        all_students_mac_dict = {}
+        for student in self.control_dict["students"]:
+            all_students_mac_dict[student[1]] = student[0]
+
+        present_students = []
+        for device in devices:
+            if(device[1] in all_students_mac_dict):
+                present_students.append([all_students_mac_dict[device[1]], device[1]])
+
+        if(present_students != self.control_dict["scanned_students"]):
+            self.control_dict["scanned_students"] = present_students
+            if (len(present_students) == 0):
+                self.control_dict["bluetooth_scan_message"] = "No students found."
+                self.control_dict["show_bluetooth_scan_message"] = True
+            else:
+                self.control_dict["show_scanned_students"] = True
+        else:
+            self.control_dict["reset_bluetooth_scan_button"] = True
+            
+
+    def bluetooth_scan(self):
+        
+        if(len(self.control_dict["students"]) == 0):
+            Snackbar(
+                text="No students found.",
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+            return
+        
+        self.root.ids.bluetooth_scan_button.disabled = True
+        self.root.ids.bluetooth_scan_spinner.active = True
+        # self.root.ids.bluetooth_icon_scan.color = self.theme_color
+        threading.Thread(target=self.bluetooth_scan_thread).start()
+
+    def automatic_attendance_thread(self):
+        
+        try:
+            devices = self.get_nearby_devices()
+        except:
+            self.control_dict["automatic_attendance_snackbar_message"] = "Failed to connect to bluetooth."
+            self.control_dict["automatic_attendance_snackbar"] = True
+            return
+
+        all_students_mac_set = set()
+        for student in self.control_dict["students"]:
+            all_students_mac_set.add(student[1])
+
+        present_student_mac_set = set()
+        for device in devices:
+            if(device[1] in all_students_mac_set):
+                present_student_mac_set.add(device[1])
+
+        
+        present_students = {}
+
+        for student in self.control_dict["students"]:
+            if(student[1] in present_student_mac_set):
+                present_students[student[0]] = True
+            else:
+                present_students[student[1]] = False
+
+        url = self.domain + "/api/mark_attendance/"
+        data = {
+            "username": self.config_dict["username"],
+            "course_code": self.control_dict["current_course"],
+            "batch" : self.control_dict["current_batch"],
+            "students": present_students,
+            "session_id": self.config_dict["session_id"]
+        }
+
+        try:
+            response = requests.post(url, json=data)
+        except:
+            self.control_dict["automatic_attendance_snackbar_message"] = "Failed to connect to server."
+            self.control_dict["automatic_attendance_snackbar"] = True
+            return
+
+        self.control_dict["automatic_attendance_snackbar_message"] = response.json()["message"]
+        self.control_dict["automatic_attendance_snackbar"] = True
+        self.control_dict["reset_automatic_attendance_button"] = True
+
+    def automatic_attendance(self):
+
+        if(len(self.control_dict["students"]) == 0):
+            Snackbar(
+                text="No students found.",
+                snackbar_x="9dp",
+                snackbar_y="9dp",
+                size_hint_x=0.95,
+                duration=1.5
+            ).open()
+            return
+        
+        self.root.ids.automatic_attendance_button.disabled = True
+        self.root.ids.automatic_attendance_spinner.active = True
+        threading.Thread(target=self.automatic_attendance_thread).start()
+                
     def course_options_callback(self, course):
         pass
+
+    def add_student_dialog_callback(self):
+        pass
+    
+    def get_nearby_devices(self):
         
+        import bluetooth
+        nearby_devices = bluetooth.discover_devices(duration = 5, lookup_names = True, flush_cache = True)
+        devices_list = []
+        for addr, name in nearby_devices:
+            devices_list.append([name, addr])
+        return devices_list
+        
+
     def temp(self):
         if (DEBUG):
 

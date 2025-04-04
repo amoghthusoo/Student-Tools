@@ -3,10 +3,10 @@ import requests
 url = "http://localhost:8000/api/list_students/"
 
 data = {
-    "username" : "amogh",
+    "username" : "gauravsir",
     "course_code" : "CS102",
     "batch" : "2024",
-    "session_id" : "887eb5c9-5b1e-4f79-b73a-661b4d49f068"
+    "session_id" : "bd642c93-1ba2-4092-94a1-9bb437b22e71"
 }
 
 response = requests.post(url, data=data)
