@@ -143,3 +143,10 @@ class ListAttendanceSerializer(serializers.Serializer):
 
     username = serializers.CharField(max_length = 256)  
     session_id = serializers.CharField()
+
+class GetAttendanceReportSerializer(serializers.Serializer):
+    
+        username = serializers.CharField(max_length = 256)  # Faculty username
+        course_code = serializers.CharField(max_length = 256)
+        batch = serializers.CharField(max_length = 256)
+        session_id = serializers.CharField()

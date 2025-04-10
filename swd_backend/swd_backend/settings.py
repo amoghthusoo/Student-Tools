@@ -26,7 +26,8 @@ SECRET_KEY = 'django-insecure-%ri^h$3ut-)c#gqrp3sl0c@$tp$4&k&1u9alle1nh8s4lh7%$7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "uptight-eagle-student-tools-c23ce9ad.koyeb.app"]  
+# ALLOWED_HOSTS = ["localhost", "127.0.0.1", "uptight-eagle-student-tools-c23ce9ad.koyeb.app"]  
+ALLOWED_HOSTS = ["*"]  
 
 # Application definition
 

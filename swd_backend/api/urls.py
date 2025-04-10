@@ -26,4 +26,5 @@ urlpatterns = [
     path("list_students/", ListStudentsAPIView.as_view(), name = "list_students"),
     path("mark_attendance/", MarkAttendanceAPIView.as_view(), name = "mark_attendance"),
     path("list_attendance/", ListAttendanceAPIView.as_view(), name = "list_attendance"),
+    path("get_attendance_report/", GetAttendanceReportAPIView.as_view(), name = "view_attendance_report"),
 ]

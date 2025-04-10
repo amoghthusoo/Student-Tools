@@ -600,12 +600,12 @@ class AddStudentAPIView(APIView):
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
             if(database.user_exists(request.data["student_username"]) == False):
-                database.save_log(request["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
                 database.close()
                 return Response({"message": "Student does not exist!"}, status=status.HTTP_400_BAD_REQUEST)
             
             if(database.student_exists(request.data["student_username"], request.data["course_code"], request.data["batch"])):
-                database.save_log(request["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
                 database.close()
                 return Response({"message": "Student already exists!"}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -693,6 +693,37 @@ class ListAttendanceAPIView(APIView):
             database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
             database.close()
             return Response({"attendance": attendance}, status = status.HTTP_200_OK)
+        
+        else:
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.close()
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class GetAttendanceReportAPIView(APIView):
+
+    def post(self, request):
+
+        database = Database()
+        database.create_tables()
+        serializers = GetAttendanceReportSerializer(data = request.data)
+
+        if(serializers.is_valid()):
+
+            if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.close()
+                return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
+
+            if(not database.faculty_coursecode_batch_combination_exists(request.data["username"], request.data["course_code"], request.data["batch"])):
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.close()
+                return Response({"message": "Access Denied!"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            attendance_report = database.get_attendance_report(request.data["course_code"], request.data["batch"])
+            
+            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+            database.close()
+            return Response({"attendance_report": attendance_report}, status = status.HTTP_200_OK)
         
         else:
             database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")

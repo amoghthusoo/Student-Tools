@@ -517,6 +517,28 @@ class Database:
         insert into logs(date, time, username, api_endpoint, status_code, ip_address, description) values (%s, %s, %s, %s, %s, %s, %s)
         """, (current_date, current_time, username, api_endpoint, status_code, ip_address, description))
 
+    def faculty_coursecode_batch_combination_exists(self, username, course_code, batch):
+        
+        self.crs.execute("""
+        select * from courses where faculty_username = %s and course_code = %s and batch = %s;
+        """, (username, course_code, batch))
+
+        result = self.crs.fetchone()
+        if(result):
+            return True
+        else:
+            return False
+
+    def get_attendance_report(self, course_code, batch):
+        
+        self.crs.execute("""
+        select student_username, attendance, total_classes from attendance where course_code = %s and batch = %s;
+        """, (course_code, batch))
+
+        result = self.crs.fetchall()
+
+        return result
+
     def close(self):
         self.hdl.close()
 
