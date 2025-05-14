@@ -115,6 +115,12 @@ class Database:
                         api_endpoint varchar(256),
                         status_code int,
                         ip_address varchar(32),
+                        os varchar(32),
+                        os_version varchar(32),
+                        architecture varchar(32),
+                        python_version varchar(32),
+                        hostname varchar(256),
+                        processor varchar(256),
                         description varchar(1024) default null
                         );
         """)
@@ -507,15 +513,15 @@ class Database:
         insert into used_otps values (%s);
         """, (PasswordHasher.hash_password_bcrypt(opt),))
 
-    def save_log(self, username, api_endpoint, status_code, ip_address, description):
+    def save_log(self, username, api_endpoint, status_code, ip_address,  os, os_version, architecture, python_version, hostname, processor, description):
 
         current_datetime = datetime.now()
         current_date = current_datetime.date()
         current_time = current_datetime.time()
 
         self.crs.execute("""
-        insert into logs(date, time, username, api_endpoint, status_code, ip_address, description) values (%s, %s, %s, %s, %s, %s, %s)
-        """, (current_date, current_time, username, api_endpoint, status_code, ip_address, description))
+        insert into logs(date, time, username, api_endpoint, status_code, ip_address, os, os_version, architecture, python_version, hostname, processor, description) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);  
+        """, (current_date, current_time, username, api_endpoint, status_code, ip_address,  os, os_version, architecture, python_version, hostname, processor, description))
 
     def faculty_coursecode_batch_combination_exists(self, username, course_code, batch):
         

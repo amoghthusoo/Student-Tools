@@ -28,15 +28,18 @@ import os
 import requests
 import threading
 import re
+import platform
+import csv
 
 FONT = "InstagramSans-Medium.ttf"
 LabelBase.register(DEFAULT_FONT, FONT)
 PLATFORM = platform
 
-DEBUG = True
+WINDOWS_MODE = True
+DEBUG = False
 LIVE_DOMAIN = False
 
-if (PLATFORM == "win"):
+if (WINDOWS_MODE):
     Window.size = (380, 768)
     Window.top = 0
     Window.left = 986
@@ -45,8 +48,8 @@ if (LIVE_DOMAIN):
     DOMAIN = "https://uptight-eagle-student-tools-c23ce9ad.koyeb.app/"
 
 else:
-    # DOMAIN = "http://127.0.0.1:8000/"
-    DOMAIN = "http://192.168.137.1:8000/"
+    DOMAIN = "http://127.0.0.1:8000/"
+    # DOMAIN = "http://192.168.137.1:8000/"
 
 UI = """
 
@@ -939,7 +942,7 @@ MDScreenManager:
                 
                 title : "Attendance Report"
                 left_action_items : [["arrow-left", lambda x : app.redirect_to_mark_attendance_screen_backward()]]
-                right_action_items : []
+                right_action_items : [["dots-vertical", lambda x: app.temp()], ["download-box", lambda x : app.export_attendance_as_csv_dialog()]]
                 md_bg_color : app.theme_color
                 elevation : 0
 
@@ -1030,6 +1033,15 @@ class App(MDApp):
         self.theme_font = FONT
         self.domain = DOMAIN
         self.platform = PLATFORM
+
+        self.system_info = {
+            "os": platform.system(),
+            "os_version": platform.version(),
+            "architecture": platform.architecture()[0],
+            "python_version": platform.python_version(),
+            "hostname": platform.node(),
+            "processor": platform.processor()
+        }
 
         self.control_dict = {
             "sign_up_otp_sent_snackbar": False,
@@ -2335,6 +2347,7 @@ class App(MDApp):
             "username": self.config_dict["username"],
             "session_id": self.config_dict["session_id"]
         }
+        data.update(self.system_info)
 
         file = {
             "file": open(f"{self.control_dict['file_path']}", "rb"),
@@ -2411,6 +2424,7 @@ class App(MDApp):
             "username": self.root.ids.sign_in_username.text,
             "password": self.root.ids.sign_in_password.text
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -2466,6 +2480,7 @@ class App(MDApp):
 
         url = self.domain + "api/generate_registration_otp/"
         data = {"email": self.root.ids.sign_up_email.text}
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -2501,6 +2516,7 @@ class App(MDApp):
         data = {"username": self.root.ids.reset_password_username.text,
                 "email": self.root.ids.reset_password_email.text
                 }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -2550,6 +2566,7 @@ class App(MDApp):
             "is_student": self.root.ids.sign_up_student_account_checkbox.active,
             "otp": int(self.root.ids.sign_up_otp.text)
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -2644,6 +2661,7 @@ class App(MDApp):
             "otp": int(self.root.ids.reset_password_otp.text),
             "new_password": self.root.ids.reset_password_password.text,
         }
+        data.update(self.system_info)
 
         print(data)
 
@@ -2988,6 +3006,7 @@ class App(MDApp):
             "username": self.config_dict["username"],
             "session_id": self.config_dict["session_id"]
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -3046,6 +3065,7 @@ class App(MDApp):
             "username": self.config_dict["username"],
             "session_id": self.config_dict["session_id"]
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -3141,6 +3161,7 @@ class App(MDApp):
                 "file_name": self.control_dict["file_name"],
                 # Send filename in request body
                 "session_id": self.config_dict["session_id"]}
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)  # Stream the file
@@ -3181,6 +3202,7 @@ class App(MDApp):
             "file_name": self.control_dict["file_name"],
             "session_id": self.config_dict["session_id"]
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -3208,6 +3230,7 @@ class App(MDApp):
             "username": self.config_dict["username"],
             "session_id": self.config_dict["session_id"]
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -3252,6 +3275,7 @@ class App(MDApp):
             "session_id": self.config_dict["session_id"],
             "thread_name": self.create_thread_dialog.content_cls.text
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -3329,6 +3353,7 @@ class App(MDApp):
             "thread_name": self.control_dict["delete_thread_name"],
             "session_id": self.config_dict["session_id"],
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -3427,6 +3452,7 @@ class App(MDApp):
             "reply": self.root.ids.post_reply_message_box.text,
             "session_id": self.config_dict["session_id"]
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -3460,6 +3486,7 @@ class App(MDApp):
             "username": self.config_dict["username"],
             "session_id": self.config_dict["session_id"],
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -3507,6 +3534,7 @@ class App(MDApp):
             "username": self.config_dict["username"],
             "session_id": self.config_dict["session_id"]
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -3606,6 +3634,7 @@ class App(MDApp):
             "username": self.config_dict["username"],
             "session_id": self.config_dict["session_id"]
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -3725,6 +3754,7 @@ class App(MDApp):
             "batch": batch,
             "session_id": self.config_dict["session_id"]
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -3790,6 +3820,8 @@ class App(MDApp):
             "batch" : batch,
             "session_id" : self.config_dict["session_id"]
         }
+        data.update(self.system_info)
+
         try:
             response = requests.post(url, json=data)
         except:
@@ -3830,10 +3862,14 @@ class App(MDApp):
         for student in self.student_table.get_row_checks():
             present_students_set.add(student[1])
 
+        print(present_students_set)
+
         present_students = {}
         for student in self.control_dict["students"]:
             if(student[0] in present_students_set):
                 present_students[student[0]] = True
+
+        print(present_students)
 
         url = self.domain + "/api/mark_attendance/"
         data = {
@@ -3843,6 +3879,7 @@ class App(MDApp):
             "students": present_students,
             "session_id": self.config_dict["session_id"]
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -3995,6 +4032,7 @@ class App(MDApp):
             "students": present_students,
             "session_id": self.config_dict["session_id"]
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -4054,6 +4092,7 @@ class App(MDApp):
             "batch" : self.control_dict["current_batch"],
             "session_id": self.config_dict["session_id"]
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -4102,6 +4141,7 @@ class App(MDApp):
             "mac_address": mac_address,
             "session_id": self.config_dict["session_id"]
         }
+        data.update(self.system_info)
 
         try:
             response = requests.post(url, json=data)
@@ -4191,9 +4231,12 @@ class App(MDApp):
         self.add_student_dialog.open()
 
     def add_student_dialog_callback(self, instance_table, instance_row):
-        # Access the tuple from the instance_row
-        row_index = instance_row.index  # Get the index of the row
-        row_data = instance_table.row_data[row_index - 1]
+    
+        inter_index = instance_row.index
+        row_index = inter_index // 3
+        row_data = instance_table.row_data[row_index]
+
+        
         
         add_student_box_layout = MDBoxLayout(
             orientation="vertical",
@@ -4284,7 +4327,7 @@ class App(MDApp):
 
     def get_nearby_devices(self):
         
-        if(self.platform == "win"):
+        if(WINDOWS_MODE):
             import bluetooth
             nearby_devices = bluetooth.discover_devices(duration = 5, lookup_names = True, flush_cache = True)
             devices_list = []
@@ -4345,27 +4388,98 @@ class App(MDApp):
             receiver.stop()
 
             return discovered_devices
-        
+
+    def export_attendance_as_csv(self):
+
+        attendance = self.control_dict["attendance_report"]
+            
+        course_code = self.control_dict["current_course"]
+        batch = self.control_dict["current_batch"]
+        download_path = os.path.join(os.path.join(os.path.expanduser('~'), 'Downloads'), f'Attendance_Report_{course_code}_{batch}.csv')
+
+        for row in attendance:
+            percentage = (row[1] / row[2]) * 100 if row[2] != 0 else 0
+            row.append(round(percentage, 2)) 
+
+        with open(download_path, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Name', 'Present', 'Total', 'Percentage'])
+            writer.writerows(attendance)
+
+        self.export_attendance_reprot_dialog.dismiss()
+        Snackbar(
+            text="Attendance report exported successfully.",
+            snackbar_x="9dp",
+            snackbar_y="9dp",
+            size_hint_x=0.95,
+            duration=1.5
+        ).open()
+
+
+
+    def export_attendance_as_csv_dialog(self):
+
+        if(len(self.control_dict["attendance_report"]) == 0):
+            Snackbar(
+            text="No students found.",
+            snackbar_x="9dp",
+            snackbar_y="9dp",
+            size_hint_x=0.95,
+            duration=1.5
+            ).open()
+            return
+            
+        self.export_attendance_reprot_dialog = MDDialog(
+            title="Export Report",
+            text="Do you want to export the Attendance Report?",
+            size_hint=(0.9, 0.2),
+            buttons=[
+                MDFlatButton(
+                    text="CANCEL",
+                    on_release = lambda button: self.export_attendance_reprot_dialog.dismiss()
+                ),
+                MDFlatButton(
+                    text="EXPORT",
+                    on_release = lambda button: self.export_attendance_as_csv()
+                ),
+            ],
+            auto_dismiss=False
+        )
+        self.export_attendance_reprot_dialog.open()
+
     def temp(self):
         if (DEBUG):
-            for key, value in self.config_dict.items():
-                print(f"{key}: {value}")
-            print()
-            for key, value in self.control_dict.items():
-                print(f"{key}: {value}")
+            # for key, value in self.config_dict.items():
+            #     print(f"{key}: {value}")
+            # print()
+            # for key, value in self.control_dict.items():
+            #     print(f"{key}: {value}")
+            present_students_set = set()
+            for student in self.student_table.get_row_checks():
+                present_students_set.add(student[1])
+
+            print(present_students_set)
+
+            present_students = {}
+            for student in self.control_dict["students"]:
+                if(student[0] in present_students_set):
+                    present_students[student[0]] = True
+
+            print(present_students)
+
 
     def on_start(self):
         if (DEBUG):
             self.fps_monitor_start()
-
-	from android.permissions import request_permissions, Permission
-        request_permissions([
-            Permission.BLUETOOTH,
-            Permission.BLUETOOTH_ADMIN,
-            Permission.ACCESS_FINE_LOCATION,
-            Permission.BLUETOOTH_SCAN,
-            Permission.BLUETOOTH_CONNECT
-        ])
+        
+        # from android.permissions import request_permissions, Permission
+        # request_permissions([
+        #     Permission.BLUETOOTH,
+        #     Permission.BLUETOOTH_ADMIN,
+        #     Permission.ACCESS_FINE_LOCATION,
+        #     Permission.BLUETOOTH_SCAN,
+        #     Permission.BLUETOOTH_CONNECT
+        # ])
 
     def build(self):
         return Builder.load_string(UI)

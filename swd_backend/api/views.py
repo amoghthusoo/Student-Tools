@@ -39,7 +39,7 @@ class GenerateRegistrationOtpAPIView(APIView):
 
                 if(database.email_exists(request.data["email"])):
 
-                    database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                    database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                     database.close()
                     return Response({"message": "Email already exists!"}, status=status.HTTP_400_BAD_REQUEST)
                 
@@ -61,17 +61,17 @@ class GenerateRegistrationOtpAPIView(APIView):
 
                 email.close()
 
-                database.save_log("anonymous", request.path, status.HTTP_201_CREATED, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_201_CREATED, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "OTP sent successfully!"}, status=status.HTTP_201_CREATED)
             
             except Exception as e:
                 print(f"Exception -> {e}")
-                database.save_log("anonymous", request.path, status.HTTP_500_INTERNAL_SERVER_ERROR, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_500_INTERNAL_SERVER_ERROR, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Failed to generate OTP."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+        database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
         database.close()
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -87,17 +87,17 @@ class RegistrationAPIView(APIView):
 
 
             if(database.user_exists(request.data["username"])):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "User already exists!"}, status=status.HTTP_400_BAD_REQUEST)
             
             if(database.email_exists(request.data["email"])):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Email already exists!"}, status=status.HTTP_400_BAD_REQUEST)
             
             if(not database.valid_registration_otp(request.data["email"], str(request.data["otp"]))):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Incorrect OTP!"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -106,7 +106,7 @@ class RegistrationAPIView(APIView):
             database.clear_otp(request.data["email"], "registration")
             database.register(request.data["username"], hashed_password, request.data["email"], request.data["is_student"])
             
-            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"message": "Registered successfully!"}, status=status.HTTP_201_CREATED)
         
@@ -127,7 +127,7 @@ class LoginAPIView(APIView):
                 session_id = str(uuid.uuid4())
                 database.save_session_id(request.data["username"], session_id)
                 
-                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Logged in successfully!", 
                                  "username" : request.data["username"], 
@@ -135,12 +135,12 @@ class LoginAPIView(APIView):
                                  "session_id" : session_id}, 
                                  status=status.HTTP_200_OK)
             else:
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid credentials!"}, status=status.HTTP_400_BAD_REQUEST)
             
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -174,20 +174,17 @@ class GenerateResetPasswordAPIView(APIView):
                     to_email = request.data["email"]
                 )
 
-                
-                database.close()
-            
             else:
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid Details"}, status=status.HTTP_400_BAD_REQUEST)
 
-            database.save_log("anonymous", request.path, status.HTTP_201_CREATED, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_201_CREATED, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"message": "OTP sent successfully!"}, status=status.HTTP_201_CREATED)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -203,25 +200,25 @@ class ResetPasswordAPIView(APIView):
 
             if(not database.valid_reset_password_otp(request.data["email"], str(request.data["otp"]))):
                 
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Incorrect OTP!"}, status=status.HTTP_400_BAD_REQUEST)
             
             elif(not database.user_email_combination_exists(request.data["username"], request.data["email"])):
                 
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid Details!"}, status=status.HTTP_400_BAD_REQUEST)
             
             else:
                 database.clear_otp(request.data["email"], "reset_password")
                 database.reset_password(request.data["username"], PasswordHasher.hash_password_bcrypt(request.data["new_password"]))
-                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Password reset successfully!"}, status=status.HTTP_200_OK)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -238,16 +235,16 @@ class LogoutAPIView(APIView):
             if(database.valid_session_id(request.data["username"], request.data["session_id"])):
                 database.clear_session_id(request.data["username"])
                 
-                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Logged out successfully!"}, status=status.HTTP_200_OK)
             else:
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -263,7 +260,7 @@ class FileUploadAPIView(APIView):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
                 
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -273,7 +270,7 @@ class FileUploadAPIView(APIView):
             os.makedirs(os.path.dirname(save_path), exist_ok = True)
 
             if(os.path.exists(save_path)):
-                database.save_log(request.data["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "File already exists!"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -281,12 +278,12 @@ class FileUploadAPIView(APIView):
                 for chunk in uploaded_file.chunks():
                     destination.write(chunk)
             
-            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"message": "File uploaded successfully!", "file_name": uploaded_file.name}, status = status.HTTP_201_CREATED)
 
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"message": str(serializers.errors["file"][0])}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -301,7 +298,7 @@ class FileDownloadAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -311,17 +308,17 @@ class FileDownloadAPIView(APIView):
                 with open(file_path, "rb") as file:
                     file_data = file.read() # Read file data
 
-                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return HttpResponse(file_data, status = status.HTTP_200_OK) 
                    
             else:
-                database.save_log(request.data["username"], request.path, status.HTTP_404_NOT_FOUND, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_404_NOT_FOUND, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "File not found!"}, status = status.HTTP_404_NOT_FOUND)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -336,7 +333,7 @@ class FileDeleteAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -344,17 +341,17 @@ class FileDeleteAPIView(APIView):
 
             if(os.path.exists(file_path)):
                 os.remove(file_path)
-                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "File deleted successfully!"}, status = status.HTTP_200_OK)
                    
             else:
-                database.save_log(request.data["username"], request.path, status.HTTP_404_NOT_FOUND, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_404_NOT_FOUND, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "File not found!"}, status = status.HTTP_404_NOT_FOUND)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class FileListAPIView(APIView):
@@ -368,7 +365,7 @@ class FileListAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -376,17 +373,17 @@ class FileListAPIView(APIView):
 
             if(os.path.exists(user_dir)):
                 files = os.listdir(user_dir)
-                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"files": files}, status = status.HTTP_200_OK)
                    
             else:
-                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"files": []}, status = status.HTTP_200_OK)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -401,23 +398,23 @@ class CreateThreadAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
 
             if(database.if_thread_exists(request.data["thread_name"])):
-                database.save_log(request.data["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Thread already exists!"}, status=status.HTTP_400_BAD_REQUEST)
             
             database.create_thread(request.data["username"], request.data["thread_name"])
             
-            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"message": "Thread created successfully!"}, status = status.HTTP_201_CREATED)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -432,18 +429,18 @@ class PostReplyAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
             database.post_reply(request.data["thread_name"], request.data["username"], request.data["reply"])
             
-            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"message": "Reply posted successfully!"}, status = status.HTTP_201_CREATED)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -458,18 +455,18 @@ class ListThreadsAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
             threads = database.list_threads()
 
-            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"threads": threads}, status = status.HTTP_200_OK)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -484,18 +481,18 @@ class ListRepliesAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
             replies = database.list_replies(request.data["thread_name"])
             
-            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"replies": replies}, status = status.HTTP_200_OK)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -510,19 +507,19 @@ class DeleteThreadAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
             database.delete_thread(request.data["thread_name"])
 
-            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
 
             return Response({"message": "Thread deleted successfully!"}, status = status.HTTP_200_OK)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -537,23 +534,23 @@ class AddCourseAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
             if(database.course_exists(request.data["username"], request.data["course_code"], request.data["course_name"], request.data["batch"])):
-                database.save_log(request.data["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Course already exists!"}, status=status.HTTP_400_BAD_REQUEST)
             
             database.add_course(request.data["username"], request.data["course_code"], request.data["course_name"], request.data["batch"])
             
-            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"message": "Course added successfully!"}, status = status.HTTP_201_CREATED)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -568,18 +565,18 @@ class ListCoursesAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
             courses = database.list_courses(request.data["username"])
             
-            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"courses": courses}, status = status.HTTP_200_OK)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -595,28 +592,28 @@ class AddStudentAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
             if(database.user_exists(request.data["student_username"]) == False):
-                database.save_log(request.data["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Student does not exist!"}, status=status.HTTP_400_BAD_REQUEST)
             
             if(database.student_exists(request.data["student_username"], request.data["course_code"], request.data["batch"])):
-                database.save_log(request.data["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log(request.data["username"], request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Student already exists!"}, status=status.HTTP_400_BAD_REQUEST)
             
             database.add_student(request.data["course_code"], request.data["batch"], request.data["student_username"], request.data["mac_address"])
             
-            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"message": "Student added successfully!"}, status = status.HTTP_201_CREATED)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -631,18 +628,18 @@ class ListStudentsAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
             students = database.list_students(request.data["course_code"], request.data["batch"])
             
-            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"students": students}, status = status.HTTP_200_OK)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -656,20 +653,22 @@ class MarkAttendanceAPIView(APIView):
 
         if(serializers.is_valid()):
 
+            print(request.data["students"])
+
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
 
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
             database.mark_attendance(request.data["course_code"], request.data["batch"], request.data["students"])
             
-            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_201_CREATED, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"message": "Attendance marked successfully!"}, status = status.HTTP_201_CREATED)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -684,18 +683,18 @@ class ListAttendanceAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
             
             attendance = database.list_attendance(request.data["username"])
             
-            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"attendance": attendance}, status = status.HTTP_200_OK)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -710,22 +709,22 @@ class GetAttendanceReportAPIView(APIView):
         if(serializers.is_valid()):
 
             if(database.valid_session_id(request.data["username"], request.data["session_id"]) == False):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Invalid session id!"}, status=status.HTTP_400_BAD_REQUEST)
 
             if(not database.faculty_coursecode_batch_combination_exists(request.data["username"], request.data["course_code"], request.data["batch"])):
-                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+                database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
                 database.close()
                 return Response({"message": "Access Denied!"}, status=status.HTTP_400_BAD_REQUEST)
             
             attendance_report = database.get_attendance_report(request.data["course_code"], request.data["batch"])
             
-            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), "null")
+            database.save_log(request.data["username"], request.path, status.HTTP_200_OK, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response({"attendance_report": attendance_report}, status = status.HTTP_200_OK)
         
         else:
-            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), "null")
+            database.save_log("anonymous", request.path, status.HTTP_400_BAD_REQUEST, get_client_ip(request), request.data["os"], request.data["os_version"], request.data["architecture"], request.data["python_version"], request.data["hostname"], request.data["processor"], "null")
             database.close()
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
